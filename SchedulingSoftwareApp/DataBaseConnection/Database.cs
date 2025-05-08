@@ -1,12 +1,24 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 
-public class Database
+namespace SchedulingSoftwareApp
 {
-    private static string connectionString = "server=localhost;database=SchedulingSoftware;user=sqlUser;password=NewPassw0rd!;";
-
-    public static MySqlConnection GetConnection()
+    public static class Database
     {
-        return new MySqlConnection(connectionString);
+        private static string connectionString = "server=localhost;database=SchedulingSoftware;user=sqlUser;password=NewPassw0rd!;SslMode=none;";
+
+        public static MySqlConnection GetConnection()
+        {
+            try
+            {
+                var connection = new MySqlConnection(connectionString);
+                connection.Open();
+                return connection;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Database connection error: {ex.Message}");
+            }
+        }
     }
 }
