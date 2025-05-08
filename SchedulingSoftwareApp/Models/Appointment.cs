@@ -1,9 +1,11 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp.Models
 {
@@ -24,27 +26,44 @@ namespace SchedulingSoftwareApp.Models
         public DateTime LastUpdate { get; set; }
         public string LastUpdateBy { get; set; }
 
-        public static bool InsertAppointment(int customerId, string title, string description, string location, string contact, string type, string url, DateTime start, DateTime end, string createdBy)
+        public static bool InsertAppointment(int customerId, string type, string description, string email, string createdBy, DateTime start, DateTime end)
         {
             using (var conn = Database.GetConnection())
             {
-                string query = "INSERT INTO appointment (customerId, title, description, location, contact, type, url, start, end, createDate, createdBy, lastUpdate, lastUpdateBy) VALUES (@customerId, @title, @description, @location, @contact, @type, @url, @start, @end, NOW(), @createdBy, NOW(), @createdBy)";
+                if (conn.State != ConnectionState.Open)
+                    conn.Open();
+
+                string query = @"
+            INSERT INTO appointment (customerId, type, description, contact, start, end, createDate, createdBy, lastUpdate, lastUpdateBy)
+            VALUES (@customerId, @type, @description, @contact, @start, @end, NOW(), @createdBy, NOW(), @createdBy)";
+
                 MySqlCommand cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@customerId", customerId);
-                cmd.Parameters.AddWithValue("@title", title);
-                cmd.Parameters.AddWithValue("@description", description);
-                cmd.Parameters.AddWithValue("@location", location);
-                cmd.Parameters.AddWithValue("@contact", contact);
                 cmd.Parameters.AddWithValue("@type", type);
-                cmd.Parameters.AddWithValue("@url", url);
+                cmd.Parameters.AddWithValue("@description", description);
+                cmd.Parameters.AddWithValue("@contact", email);
                 cmd.Parameters.AddWithValue("@start", start);
                 cmd.Parameters.AddWithValue("@end", end);
                 cmd.Parameters.AddWithValue("@createdBy", createdBy);
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                try
+                {
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error inserting appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                finally
+                {
+                    if (conn.State == ConnectionState.Open)
+                        conn.Close();  // Ensure the connection is always closed
+                }
             }
         }
+
+
         public static List<Appointment> GetAllAppointments()
         {
             List<Appointment> appointments = new List<Appointment>();
@@ -81,18 +100,16 @@ namespace SchedulingSoftwareApp.Models
             return appointments;
         }
 
-        public static bool UpdateAppointment(int appointmentId, string title, string description, string location, string contact, string type, string url, DateTime start, DateTime end, string updatedBy)
+        public static bool UpdateAppointment(int appointmentId, int customerId, string type, string description, string email, string updatedBy, DateTime start, DateTime end)
         {
             using (var conn = Database.GetConnection())
             {
-                string query = "UPDATE appointment SET title = @title, description = @description, location = @location, contact = @contact, type = @type, url = @url, start = @start, end = @end, lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE appointmentId = @id";
+                string query = "UPDATE appointment SET customerId = @customerId, type = @type, description = @description, contact = @contact, start = @start, end = @end, lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE appointmentId = @id";
                 MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@title", title);
-                cmd.Parameters.AddWithValue("@description", description);
-                cmd.Parameters.AddWithValue("@location", location);
-                cmd.Parameters.AddWithValue("@contact", contact);
+                cmd.Parameters.AddWithValue("@customerId", customerId);
                 cmd.Parameters.AddWithValue("@type", type);
-                cmd.Parameters.AddWithValue("@url", url);
+                cmd.Parameters.AddWithValue("@description", description);
+                cmd.Parameters.AddWithValue("@contact", email);
                 cmd.Parameters.AddWithValue("@start", start);
                 cmd.Parameters.AddWithValue("@end", end);
                 cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
@@ -102,6 +119,7 @@ namespace SchedulingSoftwareApp.Models
                 return cmd.ExecuteNonQuery() > 0;
             }
         }
+
         public static bool DeleteAppointment(int appointmentId)
         {
             using (var conn = Database.GetConnection())

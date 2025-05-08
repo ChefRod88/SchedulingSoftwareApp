@@ -8,9 +8,9 @@ namespace SchedulingSoftwareApp
 {
     public static class CustomerRepository
     {
-        public static DataTable GetAllCustomers()
+        public static List<Customer> GetAllCustomers()
         {
-            DataTable customerTable = new DataTable();
+            List<Customer> customers = new List<Customer>();
 
             try
             {
@@ -19,25 +19,36 @@ namespace SchedulingSoftwareApp
                     if (conn.State != System.Data.ConnectionState.Open)
                         conn.Open();
 
-                    // Join customer and address tables to include address and phone
                     string query = @"
-                SELECT 
-                    c.customerId,
-                    c.customerName,
-                    c.active,
-                    c.createDate,
-                    c.createdBy,
-                    c.lastUpdate,
-                    c.lastUpdateBy,
-                    a.address,
-                    a.phone
-                FROM customer c
-                JOIN address a ON c.addressId = a.addressId";
+                        SELECT 
+                            customerId,
+                            customerName,
+                            addressId,
+                            active,
+                            createDate,
+                            createdBy,
+                            lastUpdate,
+                            lastUpdateBy
+                        FROM customer";
 
                     MySqlCommand cmd = new MySqlCommand(query, conn);
+
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
-                        customerTable.Load(reader);
+                        while (reader.Read())
+                        {
+                            customers.Add(new Customer
+                            {
+                                CustomerId = reader.GetInt32("customerId"),
+                                CustomerName = reader.GetString("customerName"),
+                                AddressId = reader.GetInt32("addressId"),
+                                Active = reader.GetBoolean("active"),
+                                CreateDate = reader.GetDateTime("createDate"),
+                                CreatedBy = reader.GetString("createdBy"),
+                                LastUpdate = reader.GetDateTime("lastUpdate"),
+                                LastUpdateBy = reader.GetString("lastUpdateBy")
+                            });
+                        }
                     }
 
                     conn.Close();
@@ -48,8 +59,9 @@ namespace SchedulingSoftwareApp
                 Console.WriteLine($"Error loading customers: {ex.Message}");
             }
 
-            return customerTable;
+            return customers;
         }
+    
 
 
 
