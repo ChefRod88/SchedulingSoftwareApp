@@ -58,7 +58,7 @@ namespace SchedulingSoftwareApp.Forms
                             addresses.Add(new Address
                             {
                                 AddressId = reader.GetInt32("addressId"),
-                                AddressLine1 = reader.GetString("address")
+                                AddressLine = reader.GetString("address")
                             });
                         }
                     }

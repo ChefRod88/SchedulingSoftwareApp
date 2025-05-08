@@ -28,25 +28,33 @@ namespace SchedulingSoftwareApp.Forms
                     if (conn.State != ConnectionState.Open)
                         conn.Open();
 
-                    string query = "SELECT customerId, customerName, addressId, active FROM customer";
+                    // Join customer and address tables to include address and phone
+                    string query = @"
+                SELECT 
+                    c.customerId,
+                    c.customerName,
+                    c.addressId,  -- Include addressId for update
+                    a.address,
+                    a.phone,
+                    c.active,
+                    c.createDate,
+                    c.createdBy,
+                    c.lastUpdate,
+                    c.lastUpdateBy
+                FROM customer c
+                JOIN address a ON c.addressId = a.addressId";
+
                     MySqlCommand cmd = new MySqlCommand(query, conn);
 
-                    List<Customer> customers = new List<Customer>();
+                    // Use a DataTable to handle complex joins
+                    DataTable customerTable = new DataTable();
                     using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
-                        while (reader.Read())
-                        {
-                            customers.Add(new Customer
-                            {
-                                CustomerId = reader.GetInt32("customerId"),
-                                CustomerName = reader.GetString("customerName"),
-                                AddressId = reader.GetInt32("addressId"),
-                                Active = reader.GetBoolean("active")
-                            });
-                        }
+                        customerTable.Load(reader);
                     }
 
-                    dgvCustomers.DataSource = customers;
+                    // Bind the DataTable to the DataGridView
+                    dgvCustomers.DataSource = customerTable;
 
                     conn.Close();
                 }
@@ -58,6 +66,8 @@ namespace SchedulingSoftwareApp.Forms
         }
 
 
+
+
         private void btnAddCustomer_Click(object sender, EventArgs e)
         {
             CustomerForm customerForm = new CustomerForm();
@@ -67,18 +77,52 @@ namespace SchedulingSoftwareApp.Forms
 
         private void btnUpdateCustomer_Click(object sender, EventArgs e)
         {
-            if (dgvCustomers.SelectedRows.Count > 0)
+            try
             {
-                Customer selectedCustomer = (Customer)dgvCustomers.SelectedRows[0].DataBoundItem;
-                CustomerForm customerForm = new CustomerForm(selectedCustomer);
-                customerForm.ShowDialog();
-                LoadCustomers(); // Refresh the customer list
+                if (dgvCustomers.SelectedRows.Count > 0)
+                {
+                    // Get the DataRowView from the selected row
+                    DataRowView rowView = (DataRowView)dgvCustomers.SelectedRows[0].DataBoundItem;
+
+                    // Create a Customer object from the DataRowView
+                    Customer selectedCustomer = new Customer
+                    {
+                        CustomerId = Convert.ToInt32(rowView["customerId"]),
+                        CustomerName = rowView["customerName"].ToString(),
+                        AddressId = Convert.ToInt32(rowView["addressId"]),
+                        Active = Convert.ToBoolean(rowView["active"]),
+                        CreateDate = Convert.ToDateTime(rowView["createDate"]),
+                        CreatedBy = rowView["createdBy"].ToString(),
+                        LastUpdate = Convert.ToDateTime(rowView["lastUpdate"]),
+                        LastUpdateBy = rowView["lastUpdateBy"].ToString()
+                    };
+
+                    // Prevent updating inactive customers if needed
+                    if (!selectedCustomer.Active)
+                    {
+                        MessageBox.Show("Inactive customers cannot be updated. Please activate the customer first.", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    // Open the customer form with the selected customer
+                    CustomerForm customerForm = new CustomerForm(selectedCustomer);
+                    customerForm.ShowDialog();
+
+                    // Refresh the customer list after closing the form
+                    LoadCustomers();
+                }
+                else
+                {
+                    MessageBox.Show("Please select a customer to update.", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                MessageBox.Show("Please select a customer to update.", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
 
         private void btnDeleteCustomer_Click(object sender, EventArgs e)
         {
@@ -86,14 +130,25 @@ namespace SchedulingSoftwareApp.Forms
             {
                 if (dgvCustomers.SelectedRows.Count > 0)
                 {
-                    Customer selectedCustomer = (Customer)dgvCustomers.SelectedRows[0].DataBoundItem;
+                    // Get the DataRowView from the selected row
+                    DataRowView rowView = (DataRowView)dgvCustomers.SelectedRows[0].DataBoundItem;
+                    int customerId = Convert.ToInt32(rowView["customerId"]);
+                    string customerName = rowView["customerName"].ToString();
+                    bool isActive = Convert.ToBoolean(rowView["active"]);
 
-                    var confirmResult = MessageBox.Show($"Are you sure you want to delete customer '{selectedCustomer.CustomerName}'?",
+                    // Prevent deleting active customers if required
+                    if (isActive)
+                    {
+                        MessageBox.Show("Active customers cannot be deleted. Please deactivate the customer first.", "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    var confirmResult = MessageBox.Show($"Are you sure you want to delete customer '{customerName}'?",
                         "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
                     if (confirmResult == DialogResult.Yes)
                     {
-                        bool success = CustomerRepository.DeleteCustomer(selectedCustomer.CustomerId);
+                        bool success = CustomerRepository.DeleteCustomer(customerId);
                         if (success)
                         {
                             MessageBox.Show("Customer deleted successfully!");
@@ -115,6 +170,8 @@ namespace SchedulingSoftwareApp.Forms
                 MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
 
         private void btnLogout_Click(object sender, EventArgs e)
         {

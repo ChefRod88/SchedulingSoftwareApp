@@ -10,7 +10,7 @@ namespace SchedulingSoftwareApp
     public class Address
     {
         public int AddressId { get; set; }
-        public string AddressLine1 { get; set; }
+        public string AddressLine { get; set; }
         public string AddressLine2 { get; set; }
         public int CityId { get; set; }
         public string PostalCode { get; set; }
@@ -53,7 +53,7 @@ namespace SchedulingSoftwareApp
                         addresses.Add(new Address
                         {
                             AddressId = reader.GetInt32("addressId"),
-                            AddressLine1 = reader.GetString("address"),
+                            AddressLine = reader.GetString("address"),
                             AddressLine2 = reader.GetString("address2"),
                             CityId = reader.GetInt32("cityId"),
                             PostalCode = reader.GetString("postalCode"),

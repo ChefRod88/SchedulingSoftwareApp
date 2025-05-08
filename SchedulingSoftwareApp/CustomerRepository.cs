@@ -8,35 +8,51 @@ namespace SchedulingSoftwareApp
 {
     public static class CustomerRepository
     {
-        public static List<Customer> GetAllCustomers()
+        public static DataTable GetAllCustomers()
         {
-            List<Customer> customers = new List<Customer>();
-            using (var conn = Database.GetConnection())
-            {
-                string query = "SELECT customerId, customerName, addressId, active, createDate, createdBy, lastUpdate, lastUpdateBy FROM customer";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
+            DataTable customerTable = new DataTable();
 
-                conn.Open();
-                using (MySqlDataReader reader = cmd.ExecuteReader())
+            try
+            {
+                using (var conn = Database.GetConnection())
                 {
-                    while (reader.Read())
+                    if (conn.State != System.Data.ConnectionState.Open)
+                        conn.Open();
+
+                    // Join customer and address tables to include address and phone
+                    string query = @"
+                SELECT 
+                    c.customerId,
+                    c.customerName,
+                    c.active,
+                    c.createDate,
+                    c.createdBy,
+                    c.lastUpdate,
+                    c.lastUpdateBy,
+                    a.address,
+                    a.phone
+                FROM customer c
+                JOIN address a ON c.addressId = a.addressId";
+
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
-                        customers.Add(new Customer
-                        {
-                            CustomerId = reader.GetInt32("customerId"),
-                            CustomerName = reader.GetString("customerName"),
-                            AddressId = reader.GetInt32("addressId"),
-                            Active = reader.GetBoolean("active"),
-                            CreateDate = reader.GetDateTime("createDate"),
-                            CreatedBy = reader.GetString("createdBy"),
-                            LastUpdate = reader.GetDateTime("lastUpdate"),
-                            LastUpdateBy = reader.GetString("lastUpdateBy")
-                        });
+                        customerTable.Load(reader);
                     }
+
+                    conn.Close();
                 }
             }
-            return customers;
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading customers: {ex.Message}");
+            }
+
+            return customerTable;
         }
+
+
+
 
         public static bool InsertCustomer(string customerName, int addressId, bool active, string createdBy)
         {
