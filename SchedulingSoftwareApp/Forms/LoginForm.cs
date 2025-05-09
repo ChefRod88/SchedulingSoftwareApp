@@ -1,16 +1,6 @@
-﻿using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+﻿using System;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp.Forms
@@ -111,7 +101,7 @@ namespace SchedulingSoftwareApp.Forms
                 string username = txtUsername.Text.Trim();
                 string password = txtPassword.Text.Trim();
 
-                // Validate credentials (replace this with your authentication logic)
+                // Validate credentials 
                 if (username == "test" && password == "test")
                 {
                     MessageBox.Show("You have successfully logged in!", "Login Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
