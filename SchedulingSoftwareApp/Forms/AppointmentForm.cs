@@ -78,7 +78,7 @@ namespace SchedulingSoftwareApp.Forms
             while (startTime < endTime)
             {
                 cmbAppointmentTime.Items.Add(startTime.ToString("h:mm tt"));
-                startTime = startTime.AddMinutes(30);
+                startTime = startTime.AddMinutes(15);
             }
 
             // Set the default selected time to 9:00 AM
@@ -354,5 +354,10 @@ namespace SchedulingSoftwareApp.Forms
             calendarForm.ShowDialog(); // Use ShowDialog to keep it modal
         }
 
+        private void btnAppointmentReports_Click(object sender, EventArgs e)
+        {
+            ReportsForm reportsForm = new ReportsForm();
+            reportsForm.Show();
+        }
     }
 }

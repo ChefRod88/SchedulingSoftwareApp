@@ -1,4 +1,5 @@
 ﻿using MySql.Data.MySqlClient;
+using SchedulingSoftwareApp.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -136,6 +137,9 @@ namespace SchedulingSoftwareApp.Forms
                     // Log successful login
                     LogLoginAttempt(username, success: true);
 
+                    // Check for upcoming appointments within 15 minutes
+                    CheckUpcomingAppointments();
+
                     MessageBox.Show("You have successfully logged in!", "Login Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // Open the Main Form
@@ -156,5 +160,71 @@ namespace SchedulingSoftwareApp.Forms
                 MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+        private void CheckUpcomingAppointments()
+        {
+            try
+            {
+                // Get the current UTC time and add 15 minutes
+                DateTime utcNow = DateTime.UtcNow;
+                DateTime utc15MinutesFromNow = utcNow.AddMinutes(15);
+
+                // Fetch all upcoming appointments within the next 15 minutes
+                List<Appointment> upcomingAppointments = new List<Appointment>();
+
+                using (var conn = Database.GetConnection())
+                {
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
+
+                    string query = @"
+                SELECT appointmentId, customerId, title, start, end, type
+                FROM appointment
+                WHERE start BETWEEN @start AND @end";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@start", utcNow);
+                        cmd.Parameters.AddWithValue("@end", utc15MinutesFromNow);
+
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                upcomingAppointments.Add(new Appointment
+                                {
+                                    AppointmentId = reader.GetInt32("appointmentId"),
+                                    CustomerId = reader.GetInt32("customerId"),
+                                    Title = reader.GetString("title"),
+                                    Start = reader.GetDateTime("start"),
+                                    End = reader.GetDateTime("end"),
+                                    Type = reader.GetString("type")
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Show alert if there are any upcoming appointments
+                if (upcomingAppointments.Count > 0)
+                {
+                    StringBuilder message = new StringBuilder("You have the following appointments within the next 15 minutes:\n\n");
+
+                    foreach (var appointment in upcomingAppointments)
+                    {
+                        DateTime localStartTime = appointment.Start.ToLocalTime();
+                        message.AppendLine($"- {appointment.Title} at {localStartTime.ToString("hh:mm tt")} ({appointment.Type})");
+                    }
+
+                    MessageBox.Show(message.ToString(), "Upcoming Appointments", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error checking for upcoming appointments: {ex.Message}", "Alert Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
     }
 }

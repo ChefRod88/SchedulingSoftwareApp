@@ -49,6 +49,7 @@
             this.dgvAppointments = new System.Windows.Forms.DataGridView();
             this.btnDeleteAppointment = new System.Windows.Forms.Button();
             this.btnCalendarView = new System.Windows.Forms.Button();
+            this.btnAppointmentReports = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAppointments)).BeginInit();
             this.SuspendLayout();
             // 
@@ -98,22 +99,22 @@
             // btnSaveAppointment
             // 
             this.btnSaveAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSaveAppointment.Location = new System.Drawing.Point(62, 488);
+            this.btnSaveAppointment.Location = new System.Drawing.Point(12, 488);
             this.btnSaveAppointment.Name = "btnSaveAppointment";
             this.btnSaveAppointment.Size = new System.Drawing.Size(170, 36);
             this.btnSaveAppointment.TabIndex = 16;
-            this.btnSaveAppointment.Text = "Save Appointment ";
+            this.btnSaveAppointment.Text = "Add Appointment ";
             this.btnSaveAppointment.UseVisualStyleBackColor = true;
             this.btnSaveAppointment.Click += new System.EventHandler(this.btnSaveAppointment_Click);
             // 
             // btnCancelAppointment
             // 
             this.btnCancelAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCancelAppointment.Location = new System.Drawing.Point(647, 488);
+            this.btnCancelAppointment.Location = new System.Drawing.Point(708, 789);
             this.btnCancelAppointment.Name = "btnCancelAppointment";
             this.btnCancelAppointment.Size = new System.Drawing.Size(170, 36);
             this.btnCancelAppointment.TabIndex = 17;
-            this.btnCancelAppointment.Text = "Cancel Appointment";
+            this.btnCancelAppointment.Text = "Cancel";
             this.btnCancelAppointment.UseVisualStyleBackColor = true;
             this.btnCancelAppointment.Click += new System.EventHandler(this.btnCancelAppointment_Click);
             // 
@@ -215,17 +216,17 @@
             // dgvAppointments
             // 
             this.dgvAppointments.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvAppointments.Location = new System.Drawing.Point(35, 530);
+            this.dgvAppointments.Location = new System.Drawing.Point(12, 549);
             this.dgvAppointments.Name = "dgvAppointments";
             this.dgvAppointments.RowHeadersWidth = 51;
             this.dgvAppointments.RowTemplate.Height = 24;
-            this.dgvAppointments.Size = new System.Drawing.Size(843, 234);
+            this.dgvAppointments.Size = new System.Drawing.Size(905, 234);
             this.dgvAppointments.TabIndex = 30;
             // 
             // btnDeleteAppointment
             // 
             this.btnDeleteAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDeleteAppointment.Location = new System.Drawing.Point(377, 488);
+            this.btnDeleteAppointment.Location = new System.Drawing.Point(212, 488);
             this.btnDeleteAppointment.Name = "btnDeleteAppointment";
             this.btnDeleteAppointment.Size = new System.Drawing.Size(170, 36);
             this.btnDeleteAppointment.TabIndex = 31;
@@ -236,7 +237,7 @@
             // btnCalendarView
             // 
             this.btnCalendarView.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCalendarView.Location = new System.Drawing.Point(377, 789);
+            this.btnCalendarView.Location = new System.Drawing.Point(12, 811);
             this.btnCalendarView.Name = "btnCalendarView";
             this.btnCalendarView.Size = new System.Drawing.Size(170, 36);
             this.btnCalendarView.TabIndex = 32;
@@ -244,11 +245,23 @@
             this.btnCalendarView.UseVisualStyleBackColor = true;
             this.btnCalendarView.Click += new System.EventHandler(this.btnCalendarView_Click);
             // 
+            // btnAppointmentReports
+            // 
+            this.btnAppointmentReports.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnAppointmentReports.Location = new System.Drawing.Point(316, 789);
+            this.btnAppointmentReports.Name = "btnAppointmentReports";
+            this.btnAppointmentReports.Size = new System.Drawing.Size(170, 36);
+            this.btnAppointmentReports.TabIndex = 33;
+            this.btnAppointmentReports.Text = "Apppointment Reports";
+            this.btnAppointmentReports.UseVisualStyleBackColor = true;
+            this.btnAppointmentReports.Click += new System.EventHandler(this.btnAppointmentReports_Click);
+            // 
             // AppointmentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(935, 837);
+            this.ClientSize = new System.Drawing.Size(929, 859);
+            this.Controls.Add(this.btnAppointmentReports);
             this.Controls.Add(this.btnCalendarView);
             this.Controls.Add(this.btnDeleteAppointment);
             this.Controls.Add(this.dgvAppointments);
@@ -301,5 +314,6 @@
         private System.Windows.Forms.DataGridView dgvAppointments;
         private System.Windows.Forms.Button btnDeleteAppointment;
         private System.Windows.Forms.Button btnCalendarView;
+        private System.Windows.Forms.Button btnAppointmentReports;
     }
 }
