@@ -1,11 +1,12 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
+using System.Configuration;
 
 namespace SchedulingSoftwareApp
 {
     public static class Database
     {
-        private static string connectionString = "server=localhost;database=client_schedule;user=sqlUser;password=Passw0rd!;SslMode=Preferred;";
+        private static string connectionString = ConfigurationManager.ConnectionStrings["localdb"].ConnectionString;
 
         public static MySqlConnection GetConnection()
         {
