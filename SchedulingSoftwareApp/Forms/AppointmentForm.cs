@@ -1,4 +1,5 @@
-﻿using SchedulingSoftwareApp.Models;
+﻿using MySql.Data.MySqlClient;
+using SchedulingSoftwareApp.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,6 +23,7 @@ namespace SchedulingSoftwareApp.Forms
             LoadCustomerDropdown();
             LoadTypeDropdown();
             LoadTimeBlocks();
+            LoadAppointments();
             this.Text = "Add New Appointment";
         }
 
@@ -34,6 +36,7 @@ namespace SchedulingSoftwareApp.Forms
             LoadCustomerDropdown();
             LoadTypeDropdown();
             LoadTimeBlocks();
+            LoadAppointments();
             PopulateFormFields();
         }
 
@@ -83,64 +86,114 @@ namespace SchedulingSoftwareApp.Forms
                 cmbAppointmentTime.SelectedIndex = 0;
         }
 
+        private void LoadAppointments()
+        {
+            try
+            {
+                // Create a new list to hold appointments
+                List<Appointment> appointments = new List<Appointment>();
+
+                // Use a single connection with proper exception handling
+                using (MySqlConnection conn = Database.GetConnection())
+                {
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
+
+                    // Fetch all appointments
+                    string query = "SELECT * FROM appointment";
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                appointments.Add(new Appointment
+                                {
+                                    AppointmentId = reader.GetInt32("appointmentId"),
+                                    CustomerId = reader.GetInt32("customerId"),
+                                    Title = reader.GetString("title"),
+                                    Description = reader.GetString("description"),
+                                    Location = reader.GetString("location"),
+                                    Contact = reader.GetString("contact"),
+                                    Type = reader.GetString("type"),
+                                    Url = reader.GetString("url"),
+                                    Start = reader.GetDateTime("start"),
+                                    End = reader.GetDateTime("end"),
+                                    CreateDate = reader.GetDateTime("createDate"),
+                                    CreatedBy = reader.GetString("createdBy"),
+                                    LastUpdate = reader.GetDateTime("lastUpdate"),
+                                    LastUpdateBy = reader.GetString("lastUpdateBy")
+                                });
+                            }
+                        }
+                    }
+                }
+
+                // Bind to the DataGridView
+                BindingList<Appointment> bindingList = new BindingList<Appointment>(appointments);
+                dgvAppointments.DataSource = bindingList;
+
+                // Set column headers for better readability
+                dgvAppointments.Columns["AppointmentId"].HeaderText = "ID";
+                dgvAppointments.Columns["CustomerId"].HeaderText = "Customer ID";
+                dgvAppointments.Columns["Title"].HeaderText = "Title";
+                dgvAppointments.Columns["Description"].HeaderText = "Description";
+                dgvAppointments.Columns["Location"].HeaderText = "Location";
+                dgvAppointments.Columns["Contact"].HeaderText = "Contact";
+                dgvAppointments.Columns["Type"].HeaderText = "Type";
+                dgvAppointments.Columns["Url"].HeaderText = "URL";
+                dgvAppointments.Columns["Start"].HeaderText = "Start Time";
+                dgvAppointments.Columns["End"].HeaderText = "End Time";
+
+                // Hide unnecessary columns
+                dgvAppointments.Columns["CreateDate"].Visible = false;
+                dgvAppointments.Columns["CreatedBy"].Visible = false;
+                dgvAppointments.Columns["LastUpdate"].Visible = false;
+                dgvAppointments.Columns["LastUpdateBy"].Visible = false;
+
+                dgvAppointments.AutoResizeColumns();
+            }
+            catch (InvalidOperationException invOpEx)
+            {
+                MessageBox.Show($"Database connection issue: {invOpEx.Message}", "Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading appointments: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+
+
+
         private void PopulateFormFields()
         {
             // Populate fields if in update mode
             if (_isUpdateMode && _selectedAppointment != null)
             {
                 cmbCustomerName.SelectedValue = _selectedAppointment.CustomerId;
+                txtTitle.Text = _selectedAppointment.Title;
                 txtDescription.Text = _selectedAppointment.Description;
-                txtEmail.Text = _selectedAppointment.Contact;
+                txtLocation.Text = _selectedAppointment.Location;
+                txtContact.Text = _selectedAppointment.Contact;
                 cmbType.Text = _selectedAppointment.Type;
                 dtpAppointmentDay.Value = _selectedAppointment.Start.Date;
                 cmbAppointmentTime.SelectedItem = _selectedAppointment.Start.ToString("h:mm tt");
             }
         }
 
-        private void btnSaveAppointment_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                // Validate inputs
-                if (!ValidateAppointmentInputs(out int customerId, out string type, out string description, out string email, out DateTime start, out DateTime end))
-                    return;
-
-                bool success;
-                if (_isUpdateMode)
-                {
-                    // Update existing appointment
-                    success = Appointment.UpdateAppointment(_selectedAppointment.AppointmentId, customerId, type, description, email, "Admin", start, end);
-                }
-                else
-                {
-                    // Add new appointment
-                    success = Appointment.InsertAppointment(customerId, type, description, email, "Admin", start, end);
-                }
-
-                if (success)
-                {
-                    MessageBox.Show("Your appointment has been saved, and we will send you an email.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    this.Close(); // Close the form after successful addition
-                }
-                else
-                {
-                    MessageBox.Show("Failed to add appointment. Please check the input values.", "Insert Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
+        
 
 
-        private bool ValidateAppointmentInputs(out int customerId, out string type, out string description, out string email, out DateTime start, out DateTime end)
+        private bool ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime start, out DateTime end)
         {
             // Initialize out parameters
             customerId = -1;
-            type = cmbType.Text.Trim();
+            title = txtTitle.Text.Trim();
             description = txtDescription.Text.Trim();
-            email = txtEmail.Text.Trim();
+            location = txtLocation.Text.Trim();
+            contact = txtContact.Text.Trim();
+            type = cmbType.Text.Trim();
             start = DateTime.MinValue;
             end = DateTime.MinValue;
 
@@ -152,7 +205,7 @@ namespace SchedulingSoftwareApp.Forms
             }
 
             // Validate required fields
-            if (string.IsNullOrEmpty(type) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(email))
+            if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(location) || string.IsNullOrEmpty(contact) || string.IsNullOrEmpty(type))
             {
                 MessageBox.Show("All fields are required and cannot be empty.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
@@ -182,12 +235,108 @@ namespace SchedulingSoftwareApp.Forms
         }
 
 
-
-
         private void btnCancelAppointment_Click(object sender, EventArgs e)
         {
             this.Close();
         }
+
+        private void btnSaveAppointment_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (!ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime start, out DateTime end))
+                    return;
+
+                bool success;
+                if (_isUpdateMode)
+                {
+                    // Update existing appointment
+                    success = Appointment.UpdateAppointment(_selectedAppointment.AppointmentId, customerId, title, description, location, contact, type, start, end, "Admin");
+                }
+                else
+                {
+                    // Add new appointment
+                    success = Appointment.InsertAppointment(customerId, title, description, location, contact, type, start, end, "Admin");
+                }
+
+                if (success)
+                {
+                    MessageBox.Show("Your appointment has been saved, and we will send you an email.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // Refresh the appointments grid to show the latest addition or update
+                    LoadAppointments();
+
+                    // Clear the form for the next entry if adding a new appointment
+                    if (!_isUpdateMode)
+                    {
+                        cmbCustomerName.SelectedIndex = -1;
+                        txtTitle.Clear();
+                        txtDescription.Clear();
+                        txtLocation.Clear();
+                        txtContact.Clear();
+                        cmbType.SelectedIndex = -1;
+                        cmbAppointmentTime.SelectedIndex = 0;
+                        dtpAppointmentDay.Value = DateTime.Today;
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("Failed to add appointment. Please check the input values.", "Insert Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnDeleteAppointment_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Make sure a row is selected
+                if (dgvAppointments.SelectedRows.Count > 0)
+                {
+                    // Get the selected appointment ID
+                    int appointmentId = Convert.ToInt32(dgvAppointments.SelectedRows[0].Cells["appointmentId"].Value);
+                    string appointmentTitle = dgvAppointments.SelectedRows[0].Cells["title"].Value.ToString();
+
+                    // Confirm deletion
+                    var confirmResult = MessageBox.Show($"Are you sure you want to delete the appointment '{appointmentTitle}'?",
+                        "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+
+                    if (confirmResult == DialogResult.Yes)
+                    {
+                        // Attempt to delete the appointment
+                        bool success = Appointment.DeleteAppointment(appointmentId);
+                        if (success)
+                        {
+                            MessageBox.Show("Appointment deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            LoadAppointments(); // Refresh the grid after deletion
+                        }
+                        else
+                        {
+                            MessageBox.Show("Failed to delete the appointment. Please try again.", "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please select an appointment to delete.", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void btnCalendarView_Click(object sender, EventArgs e)
+        {
+            CalendarForm calendarForm = new CalendarForm();
+            calendarForm.ShowDialog(); // Use ShowDialog to keep it modal
+        }
+
     }
 }
-

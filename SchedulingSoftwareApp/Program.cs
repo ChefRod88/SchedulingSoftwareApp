@@ -17,7 +17,7 @@ namespace SchedulingSoftwareApp
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new AppointmentForm());
+            Application.Run(new CalenderForm());
         }
     }
 }

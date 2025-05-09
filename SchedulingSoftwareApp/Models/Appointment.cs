@@ -26,29 +26,33 @@ namespace SchedulingSoftwareApp.Models
         public DateTime LastUpdate { get; set; }
         public string LastUpdateBy { get; set; }
 
-        public static bool InsertAppointment(int customerId, string type, string description, string email, string createdBy, DateTime start, DateTime end)
+        public static bool InsertAppointment(int customerId, string title, string description, string location, string contact, string type, DateTime start, DateTime end, string createdBy)
         {
             using (var conn = Database.GetConnection())
             {
-                if (conn.State != ConnectionState.Open)
-                    conn.Open();
-
-                string query = @"
-            INSERT INTO appointment (customerId, type, description, contact, start, end, createDate, createdBy, lastUpdate, lastUpdateBy)
-            VALUES (@customerId, @type, @description, @contact, @start, @end, NOW(), @createdBy, NOW(), @createdBy)";
-
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@customerId", customerId);
-                cmd.Parameters.AddWithValue("@type", type);
-                cmd.Parameters.AddWithValue("@description", description);
-                cmd.Parameters.AddWithValue("@contact", email);
-                cmd.Parameters.AddWithValue("@start", start);
-                cmd.Parameters.AddWithValue("@end", end);
-                cmd.Parameters.AddWithValue("@createdBy", createdBy);
-
                 try
                 {
-                    return cmd.ExecuteNonQuery() > 0;
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
+
+                    string query = @"
+                INSERT INTO appointment (customerId, title, description, location, contact, type, start, end, createDate, createdBy, lastUpdate, lastUpdateBy) 
+                VALUES (@customerId, @title, @description, @location, @contact, @type, @start, @end, NOW(), @createdBy, NOW(), @createdBy)";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@customerId", customerId);
+                        cmd.Parameters.AddWithValue("@title", title);
+                        cmd.Parameters.AddWithValue("@description", description);
+                        cmd.Parameters.AddWithValue("@location", location);
+                        cmd.Parameters.AddWithValue("@contact", contact);
+                        cmd.Parameters.AddWithValue("@type", type);
+                        cmd.Parameters.AddWithValue("@start", start);
+                        cmd.Parameters.AddWithValue("@end", end);
+                        cmd.Parameters.AddWithValue("@createdBy", createdBy);
+
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -58,10 +62,11 @@ namespace SchedulingSoftwareApp.Models
                 finally
                 {
                     if (conn.State == ConnectionState.Open)
-                        conn.Close();  // Ensure the connection is always closed
+                        conn.Close();
                 }
             }
         }
+
 
 
         public static List<Appointment> GetAllAppointments()
@@ -100,38 +105,82 @@ namespace SchedulingSoftwareApp.Models
             return appointments;
         }
 
-        public static bool UpdateAppointment(int appointmentId, int customerId, string type, string description, string email, string updatedBy, DateTime start, DateTime end)
+        public static bool UpdateAppointment(int appointmentId, int customerId, string title, string description, string location, string contact, string type, DateTime start, DateTime end, string updatedBy)
         {
             using (var conn = Database.GetConnection())
             {
-                string query = "UPDATE appointment SET customerId = @customerId, type = @type, description = @description, contact = @contact, start = @start, end = @end, lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE appointmentId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@customerId", customerId);
-                cmd.Parameters.AddWithValue("@type", type);
-                cmd.Parameters.AddWithValue("@description", description);
-                cmd.Parameters.AddWithValue("@contact", email);
-                cmd.Parameters.AddWithValue("@start", start);
-                cmd.Parameters.AddWithValue("@end", end);
-                cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
-                cmd.Parameters.AddWithValue("@id", appointmentId);
+                try
+                {
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                    string query = @"
+                UPDATE appointment 
+                SET customerId = @customerId, title = @title, description = @description, location = @location, 
+                    contact = @contact, type = @type, start = @start, end = @end, 
+                    lastUpdate = NOW(), lastUpdateBy = @updatedBy 
+                WHERE appointmentId = @appointmentId";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@appointmentId", appointmentId);
+                        cmd.Parameters.AddWithValue("@customerId", customerId);
+                        cmd.Parameters.AddWithValue("@title", title);
+                        cmd.Parameters.AddWithValue("@description", description);
+                        cmd.Parameters.AddWithValue("@location", location);
+                        cmd.Parameters.AddWithValue("@contact", contact);
+                        cmd.Parameters.AddWithValue("@type", type);
+                        cmd.Parameters.AddWithValue("@start", start);
+                        cmd.Parameters.AddWithValue("@end", end);
+                        cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
+
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error updating appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                finally
+                {
+                    if (conn.State == ConnectionState.Open)
+                        conn.Close();
+                }
             }
         }
+
 
         public static bool DeleteAppointment(int appointmentId)
         {
             using (var conn = Database.GetConnection())
             {
-                string query = "DELETE FROM appointment WHERE appointmentId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", appointmentId);
+                try
+                {
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                    string query = "DELETE FROM appointment WHERE appointmentId = @appointmentId";
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@appointmentId", appointmentId);
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Error deleting appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return false;
+                }
+                finally
+                {
+                    if (conn.State == ConnectionState.Open)
+                        conn.Close();
+                }
             }
         }
+
+
 
     }
 
