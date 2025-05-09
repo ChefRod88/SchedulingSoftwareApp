@@ -107,6 +107,10 @@ namespace SchedulingSoftwareApp.Forms
                         {
                             while (reader.Read())
                             {
+                                // Convert UTC times to local time for display
+                                DateTime startUtc = reader.GetDateTime("start");
+                                DateTime endUtc = reader.GetDateTime("end");
+
                                 appointments.Add(new Appointment
                                 {
                                     AppointmentId = reader.GetInt32("appointmentId"),
@@ -117,8 +121,8 @@ namespace SchedulingSoftwareApp.Forms
                                     Contact = reader.GetString("contact"),
                                     Type = reader.GetString("type"),
                                     Url = reader.GetString("url"),
-                                    Start = reader.GetDateTime("start"),
-                                    End = reader.GetDateTime("end"),
+                                    Start = TimeZoneInfo.ConvertTimeFromUtc(startUtc, TimeZoneInfo.Local),
+                                    End = TimeZoneInfo.ConvertTimeFromUtc(endUtc, TimeZoneInfo.Local),
                                     CreateDate = reader.GetDateTime("createDate"),
                                     CreatedBy = reader.GetString("createdBy"),
                                     LastUpdate = reader.GetDateTime("lastUpdate"),
@@ -142,8 +146,8 @@ namespace SchedulingSoftwareApp.Forms
                 dgvAppointments.Columns["Contact"].HeaderText = "Contact";
                 dgvAppointments.Columns["Type"].HeaderText = "Type";
                 dgvAppointments.Columns["Url"].HeaderText = "URL";
-                dgvAppointments.Columns["Start"].HeaderText = "Start Time";
-                dgvAppointments.Columns["End"].HeaderText = "End Time";
+                dgvAppointments.Columns["Start"].HeaderText = "Start Time (Local)";
+                dgvAppointments.Columns["End"].HeaderText = "End Time (Local)";
 
                 // Hide unnecessary columns
                 dgvAppointments.Columns["CreateDate"].Visible = false;
@@ -162,6 +166,7 @@ namespace SchedulingSoftwareApp.Forms
                 MessageBox.Show($"Error loading appointments: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
 
 
 
@@ -244,41 +249,50 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                if (!ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime start, out DateTime end))
+                if (!ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime startLocal, out DateTime endLocal))
                     return;
+
+                // Convert local times to UTC
+                DateTime startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal);
+                DateTime endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal);
 
                 bool success;
                 if (_isUpdateMode)
                 {
                     // Update existing appointment
-                    success = Appointment.UpdateAppointment(_selectedAppointment.AppointmentId, customerId, title, description, location, contact, type, start, end, "Admin");
+                    success = Appointment.UpdateAppointment(
+                        _selectedAppointment.AppointmentId,
+                        customerId,
+                        title,
+                        description,
+                        location,
+                        contact,
+                        type,
+                        startUtc,
+                        endUtc,
+                        "Admin"
+                    );
                 }
                 else
                 {
                     // Add new appointment
-                    success = Appointment.InsertAppointment(customerId, title, description, location, contact, type, start, end, "Admin");
+                    success = Appointment.InsertAppointment(
+                        customerId,
+                        title,
+                        description,
+                        location,
+                        contact,
+                        type,
+                        startUtc,
+                        endUtc,
+                        "Admin"
+                    );
                 }
 
                 if (success)
                 {
                     MessageBox.Show("Your appointment has been saved, and we will send you an email.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // Refresh the appointments grid to show the latest addition or update
-                    LoadAppointments();
-
-                    // Clear the form for the next entry if adding a new appointment
-                    if (!_isUpdateMode)
-                    {
-                        cmbCustomerName.SelectedIndex = -1;
-                        txtTitle.Clear();
-                        txtDescription.Clear();
-                        txtLocation.Clear();
-                        txtContact.Clear();
-                        cmbType.SelectedIndex = -1;
-                        cmbAppointmentTime.SelectedIndex = 0;
-                        dtpAppointmentDay.Value = DateTime.Today;
-                    }
-
+                    LoadAppointments();  // Refresh the grid to show the new or updated appointment
                 }
                 else
                 {
@@ -287,9 +301,11 @@ namespace SchedulingSoftwareApp.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error saving appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
+
 
         private void btnDeleteAppointment_Click(object sender, EventArgs e)
         {
