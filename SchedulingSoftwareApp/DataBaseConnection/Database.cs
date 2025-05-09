@@ -5,7 +5,7 @@ namespace SchedulingSoftwareApp
 {
     public static class Database
     {
-        private static string connectionString = "server=localhost;database=SchedulingSoftware;user=sqlUser;password=NewPassw0rd!;SslMode=none;";
+        private static string connectionString = "server=localhost;database=client_schedule;user=sqlUser;password=Passw0rd!;SslMode=Preferred;";
 
         public static MySqlConnection GetConnection()
         {
