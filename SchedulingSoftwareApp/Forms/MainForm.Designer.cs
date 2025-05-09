@@ -33,6 +33,7 @@
             this.btnAddCustomer = new System.Windows.Forms.Button();
             this.btnLogout = new System.Windows.Forms.Button();
             this.dgvCustomers = new System.Windows.Forms.DataGridView();
+            this.btnManageAppointments = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCustomers)).BeginInit();
             this.SuspendLayout();
             // 
@@ -80,19 +81,30 @@
             // 
             this.dgvCustomers.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvCustomers.Location = new System.Drawing.Point(40, 100);
+            this.dgvCustomers.MultiSelect = false;
             this.dgvCustomers.Name = "dgvCustomers";
             this.dgvCustomers.RowHeadersWidth = 51;
             this.dgvCustomers.RowTemplate.Height = 24;
+            this.dgvCustomers.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvCustomers.Size = new System.Drawing.Size(730, 320);
             this.dgvCustomers.TabIndex = 12;
-            this.dgvCustomers.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvCustomers.MultiSelect = false;
+            // 
+            // btnManageAppointments
+            // 
+            this.btnManageAppointments.Location = new System.Drawing.Point(320, 438);
+            this.btnManageAppointments.Name = "btnManageAppointments";
+            this.btnManageAppointments.Size = new System.Drawing.Size(150, 50);
+            this.btnManageAppointments.TabIndex = 13;
+            this.btnManageAppointments.Text = "Manage Appointments";
+            this.btnManageAppointments.UseVisualStyleBackColor = true;
+            this.btnManageAppointments.Click += new System.EventHandler(this.btnManageAppointments_Click);
             // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(820, 500);
+            this.Controls.Add(this.btnManageAppointments);
             this.Controls.Add(this.dgvCustomers);
             this.Controls.Add(this.btnLogout);
             this.Controls.Add(this.btnAddCustomer);
@@ -113,5 +125,6 @@
         private System.Windows.Forms.Button btnAddCustomer;
         private System.Windows.Forms.Button btnLogout;
         private System.Windows.Forms.DataGridView dgvCustomers;
+        private System.Windows.Forms.Button btnManageAppointments;
     }
 }

@@ -184,5 +184,20 @@ namespace SchedulingSoftwareApp.Forms
         {
             Application.Exit(); // Ensure the entire application closes
         }
+
+        private void btnManageAppointments_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Open the Appointment Form
+                AppointmentForm appointmentForm = new AppointmentForm();
+                appointmentForm.Show();
+                this.Hide();  // Hide the current form
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error opening Appointment Form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
     }
 }

@@ -34,7 +34,6 @@
             this.cmbCustomerName = new System.Windows.Forms.ComboBox();
             this.cmbType = new System.Windows.Forms.ComboBox();
             this.btnSaveAppointment = new System.Windows.Forms.Button();
-            this.btnCancelAppointment = new System.Windows.Forms.Button();
             this.txtEmail = new System.Windows.Forms.Label();
             this.cmbAppointmentTime = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
@@ -51,6 +50,7 @@
             this.btnCalendarView = new System.Windows.Forms.Button();
             this.btnAppointmentReports = new System.Windows.Forms.Button();
             this.btnUpdateAppointment = new System.Windows.Forms.Button();
+            this.btnLogout = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAppointments)).BeginInit();
             this.SuspendLayout();
             // 
@@ -107,17 +107,6 @@
             this.btnSaveAppointment.Text = "Add Appointment ";
             this.btnSaveAppointment.UseVisualStyleBackColor = true;
             this.btnSaveAppointment.Click += new System.EventHandler(this.btnSaveAppointment_Click);
-            // 
-            // btnCancelAppointment
-            // 
-            this.btnCancelAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCancelAppointment.Location = new System.Drawing.Point(736, 811);
-            this.btnCancelAppointment.Name = "btnCancelAppointment";
-            this.btnCancelAppointment.Size = new System.Drawing.Size(170, 36);
-            this.btnCancelAppointment.TabIndex = 17;
-            this.btnCancelAppointment.Text = "Cancel";
-            this.btnCancelAppointment.UseVisualStyleBackColor = true;
-            this.btnCancelAppointment.Click += new System.EventHandler(this.btnCancelAppointment_Click);
             // 
             // txtEmail
             // 
@@ -238,7 +227,7 @@
             // btnCalendarView
             // 
             this.btnCalendarView.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCalendarView.Location = new System.Drawing.Point(12, 811);
+            this.btnCalendarView.Location = new System.Drawing.Point(12, 787);
             this.btnCalendarView.Name = "btnCalendarView";
             this.btnCalendarView.Size = new System.Drawing.Size(170, 36);
             this.btnCalendarView.TabIndex = 32;
@@ -249,7 +238,7 @@
             // btnAppointmentReports
             // 
             this.btnAppointmentReports.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAppointmentReports.Location = new System.Drawing.Point(373, 811);
+            this.btnAppointmentReports.Location = new System.Drawing.Point(238, 787);
             this.btnAppointmentReports.Name = "btnAppointmentReports";
             this.btnAppointmentReports.Size = new System.Drawing.Size(170, 36);
             this.btnAppointmentReports.TabIndex = 33;
@@ -268,11 +257,22 @@
             this.btnUpdateAppointment.UseVisualStyleBackColor = true;
             this.btnUpdateAppointment.Click += new System.EventHandler(this.btnUpdateAppointment_Click);
             // 
+            // btnLogout
+            // 
+            this.btnLogout.Location = new System.Drawing.Point(827, 12);
+            this.btnLogout.Name = "btnLogout";
+            this.btnLogout.Size = new System.Drawing.Size(90, 36);
+            this.btnLogout.TabIndex = 35;
+            this.btnLogout.Text = "Logout";
+            this.btnLogout.UseVisualStyleBackColor = true;
+            this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
+            // 
             // AppointmentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(929, 859);
+            this.Controls.Add(this.btnLogout);
             this.Controls.Add(this.btnUpdateAppointment);
             this.Controls.Add(this.btnAppointmentReports);
             this.Controls.Add(this.btnCalendarView);
@@ -289,7 +289,6 @@
             this.Controls.Add(this.cmbAppointmentTime);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtEmail);
-            this.Controls.Add(this.btnCancelAppointment);
             this.Controls.Add(this.btnSaveAppointment);
             this.Controls.Add(this.cmbType);
             this.Controls.Add(this.cmbCustomerName);
@@ -312,7 +311,6 @@
         private System.Windows.Forms.ComboBox cmbCustomerName;
         private System.Windows.Forms.ComboBox cmbType;
         private System.Windows.Forms.Button btnSaveAppointment;
-        private System.Windows.Forms.Button btnCancelAppointment;
         private System.Windows.Forms.Label txtEmail;
         private System.Windows.Forms.ComboBox cmbAppointmentTime;
         private System.Windows.Forms.Label label1;
@@ -329,5 +327,6 @@
         private System.Windows.Forms.Button btnCalendarView;
         private System.Windows.Forms.Button btnAppointmentReports;
         private System.Windows.Forms.Button btnUpdateAppointment;
+        private System.Windows.Forms.Button btnLogout;
     }
 }

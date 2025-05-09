@@ -40,7 +40,7 @@
             // 
             // btnSaveCustomer
             // 
-            this.btnSaveCustomer.Location = new System.Drawing.Point(62, 354);
+            this.btnSaveCustomer.Location = new System.Drawing.Point(146, 215);
             this.btnSaveCustomer.Name = "btnSaveCustomer";
             this.btnSaveCustomer.Size = new System.Drawing.Size(113, 69);
             this.btnSaveCustomer.TabIndex = 11;
@@ -50,7 +50,7 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Location = new System.Drawing.Point(209, 354);
+            this.btnCancel.Location = new System.Drawing.Point(293, 215);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(113, 69);
             this.btnCancel.TabIndex = 12;
@@ -63,14 +63,14 @@
             this.lblCustomerNam.AutoSize = true;
             this.lblCustomerNam.Location = new System.Drawing.Point(81, 59);
             this.lblCustomerNam.Name = "lblCustomerNam";
-            this.lblCustomerNam.Size = new System.Drawing.Size(130, 20);
+            this.lblCustomerNam.Size = new System.Drawing.Size(104, 16);
             this.lblCustomerNam.TabIndex = 13;
             this.lblCustomerNam.Text = "Customer Name";
             // 
             // lblActive
             // 
             this.lblActive.AutoSize = true;
-            this.lblActive.Location = new System.Drawing.Point(81, 175);
+            this.lblActive.Location = new System.Drawing.Point(81, 157);
             this.lblActive.Name = "lblActive";
             this.lblActive.Size = new System.Drawing.Size(44, 16);
             this.lblActive.TabIndex = 15;
@@ -81,13 +81,13 @@
             this.lblAddress.AutoSize = true;
             this.lblAddress.Location = new System.Drawing.Point(81, 116);
             this.lblAddress.Name = "lblAddress";
-            this.lblAddress.Size = new System.Drawing.Size(73, 20);
+            this.lblAddress.Size = new System.Drawing.Size(58, 16);
             this.lblAddress.TabIndex = 16;
             this.lblAddress.Text = "Address";
             // 
             // txtCustomerName
             // 
-            this.txtCustomerName.Location = new System.Drawing.Point(212, 61);
+            this.txtCustomerName.Location = new System.Drawing.Point(201, 59);
             this.txtCustomerName.Name = "txtCustomerName";
             this.txtCustomerName.Size = new System.Drawing.Size(277, 22);
             this.txtCustomerName.TabIndex = 17;
@@ -95,7 +95,7 @@
             // cmbAddress
             // 
             this.cmbAddress.FormattingEnabled = true;
-            this.cmbAddress.Location = new System.Drawing.Point(212, 112);
+            this.cmbAddress.Location = new System.Drawing.Point(201, 108);
             this.cmbAddress.Name = "cmbAddress";
             this.cmbAddress.Size = new System.Drawing.Size(274, 24);
             this.cmbAddress.TabIndex = 18;
@@ -103,9 +103,9 @@
             // chkActive
             // 
             this.chkActive.AutoSize = true;
-            this.chkActive.Location = new System.Drawing.Point(201, 176);
+            this.chkActive.Location = new System.Drawing.Point(201, 158);
             this.chkActive.Name = "chkActive";
-            this.chkActive.Size = new System.Drawing.Size(23, 21);
+            this.chkActive.Size = new System.Drawing.Size(18, 17);
             this.chkActive.TabIndex = 19;
             this.chkActive.UseVisualStyleBackColor = true;
             // 
@@ -113,7 +113,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(640, 360);
+            this.ClientSize = new System.Drawing.Size(640, 418);
             this.Controls.Add(this.chkActive);
             this.Controls.Add(this.cmbAddress);
             this.Controls.Add(this.txtCustomerName);
