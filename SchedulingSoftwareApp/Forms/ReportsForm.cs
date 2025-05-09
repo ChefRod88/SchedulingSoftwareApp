@@ -128,9 +128,8 @@ namespace SchedulingSoftwareApp.Forms
         private void btnBack_Click(object sender, EventArgs e)
         {
             // Close the ReportsForm and open the AppointmentForm
-            AppointmentForm appointmentForm = new AppointmentForm();
-            appointmentForm.Show();
-            //this.Close();
+            
+            this.Close();
         }
     }
 }

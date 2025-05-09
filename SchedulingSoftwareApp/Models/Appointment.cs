@@ -180,6 +180,52 @@ namespace SchedulingSoftwareApp.Models
             }
         }
 
+        public static Appointment GetAppointmentById(int appointmentId)
+        {
+            try
+            {
+                using (var conn = Database.GetConnection())
+                {
+                    if (conn.State != ConnectionState.Open)
+                        conn.Open();
+
+                    string query = "SELECT * FROM appointment WHERE appointmentId = @appointmentId";
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@appointmentId", appointmentId);
+                        using (MySqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return new Appointment
+                                {
+                                    AppointmentId = reader.GetInt32("appointmentId"),
+                                    CustomerId = reader.GetInt32("customerId"),
+                                    Title = reader.GetString("title"),
+                                    Description = reader.GetString("description"),
+                                    Location = reader.GetString("location"),
+                                    Contact = reader.GetString("contact"),
+                                    Type = reader.GetString("type"),
+                                    Url = reader.GetString("url"),
+                                    Start = reader.GetDateTime("start"),
+                                    End = reader.GetDateTime("end"),
+                                    CreateDate = reader.GetDateTime("createDate"),
+                                    CreatedBy = reader.GetString("createdBy"),
+                                    LastUpdate = reader.GetDateTime("lastUpdate"),
+                                    LastUpdateBy = reader.GetString("lastUpdateBy")
+                                };
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error fetching appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+
+            return null;
+        }
 
 
     }

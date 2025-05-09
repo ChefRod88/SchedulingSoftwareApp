@@ -187,7 +187,7 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-        
+
 
 
         private bool ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime start, out DateTime end)
@@ -249,15 +249,17 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
+                // Validate inputs
                 if (!ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime startLocal, out DateTime endLocal))
                     return;
 
-                // Convert local times to UTC
-                DateTime startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal);
-                DateTime endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal);
+                // Convert local times to UTC (considering the local time zone)
+                TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
+                DateTime startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, localTimeZone);
+                DateTime endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, localTimeZone);
 
                 bool success;
-                if (_isUpdateMode)
+                if (_isUpdateMode && _selectedAppointment != null)
                 {
                     // Update existing appointment
                     success = Appointment.UpdateAppointment(
@@ -272,6 +274,10 @@ namespace SchedulingSoftwareApp.Forms
                         endUtc,
                         "Admin"
                     );
+
+                    // Clear the update mode and selected appointment
+                    _isUpdateMode = false;
+                    _selectedAppointment = null;
                 }
                 else
                 {
@@ -304,6 +310,7 @@ namespace SchedulingSoftwareApp.Forms
                 MessageBox.Show($"Error saving appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
 
 
 
@@ -359,5 +366,44 @@ namespace SchedulingSoftwareApp.Forms
             ReportsForm reportsForm = new ReportsForm();
             reportsForm.Show();
         }
+
+        private void btnUpdateAppointment_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                // Ensure a row is selected
+                if (dgvAppointments.SelectedRows.Count > 0)
+                {
+                    int appointmentId = Convert.ToInt32(dgvAppointments.SelectedRows[0].Cells["AppointmentId"].Value);
+                    Appointment selectedAppointment = Appointment.GetAppointmentById(appointmentId);
+
+                    if (selectedAppointment != null)
+                    {
+                        // Set the selected appointment for updating
+                        _selectedAppointment = selectedAppointment;
+                        _isUpdateMode = true;
+
+                        // Populate the form fields
+                        cmbCustomerName.SelectedValue = selectedAppointment.CustomerId;
+                        txtTitle.Text = selectedAppointment.Title;
+                        txtDescription.Text = selectedAppointment.Description;
+                        txtLocation.Text = selectedAppointment.Location;
+                        txtContact.Text = selectedAppointment.Contact;
+                        cmbType.SelectedItem = selectedAppointment.Type;
+                        dtpAppointmentDay.Value = selectedAppointment.Start.Date;
+                        cmbAppointmentTime.SelectedItem = selectedAppointment.Start.ToString("h:mm tt");
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("Please select an appointment to update.", "Selection Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading appointment details: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
     }
 }

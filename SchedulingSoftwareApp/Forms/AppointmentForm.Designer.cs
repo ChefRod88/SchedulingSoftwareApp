@@ -50,13 +50,14 @@
             this.btnDeleteAppointment = new System.Windows.Forms.Button();
             this.btnCalendarView = new System.Windows.Forms.Button();
             this.btnAppointmentReports = new System.Windows.Forms.Button();
+            this.btnUpdateAppointment = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAppointments)).BeginInit();
             this.SuspendLayout();
             // 
             // lblCustomerName
             // 
             this.lblCustomerName.AutoSize = true;
-            this.lblCustomerName.Location = new System.Drawing.Point(209, 29);
+            this.lblCustomerName.Location = new System.Drawing.Point(33, 32);
             this.lblCustomerName.Name = "lblCustomerName";
             this.lblCustomerName.Size = new System.Drawing.Size(107, 16);
             this.lblCustomerName.TabIndex = 0;
@@ -65,7 +66,7 @@
             // lblDescription
             // 
             this.lblDescription.AutoSize = true;
-            this.lblDescription.Location = new System.Drawing.Point(215, 153);
+            this.lblDescription.Location = new System.Drawing.Point(39, 156);
             this.lblDescription.Name = "lblDescription";
             this.lblDescription.Size = new System.Drawing.Size(78, 16);
             this.lblDescription.TabIndex = 2;
@@ -74,7 +75,7 @@
             // label6
             // 
             this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(215, 324);
+            this.label6.Location = new System.Drawing.Point(39, 327);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(42, 16);
             this.label6.TabIndex = 5;
@@ -83,7 +84,7 @@
             // cmbCustomerName
             // 
             this.cmbCustomerName.FormattingEnabled = true;
-            this.cmbCustomerName.Location = new System.Drawing.Point(395, 36);
+            this.cmbCustomerName.Location = new System.Drawing.Point(219, 39);
             this.cmbCustomerName.Name = "cmbCustomerName";
             this.cmbCustomerName.Size = new System.Drawing.Size(284, 24);
             this.cmbCustomerName.TabIndex = 8;
@@ -91,7 +92,7 @@
             // cmbType
             // 
             this.cmbType.FormattingEnabled = true;
-            this.cmbType.Location = new System.Drawing.Point(395, 314);
+            this.cmbType.Location = new System.Drawing.Point(219, 317);
             this.cmbType.Name = "cmbType";
             this.cmbType.Size = new System.Drawing.Size(284, 24);
             this.cmbType.TabIndex = 9;
@@ -99,7 +100,7 @@
             // btnSaveAppointment
             // 
             this.btnSaveAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSaveAppointment.Location = new System.Drawing.Point(12, 488);
+            this.btnSaveAppointment.Location = new System.Drawing.Point(642, 124);
             this.btnSaveAppointment.Name = "btnSaveAppointment";
             this.btnSaveAppointment.Size = new System.Drawing.Size(170, 36);
             this.btnSaveAppointment.TabIndex = 16;
@@ -110,7 +111,7 @@
             // btnCancelAppointment
             // 
             this.btnCancelAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCancelAppointment.Location = new System.Drawing.Point(708, 789);
+            this.btnCancelAppointment.Location = new System.Drawing.Point(736, 811);
             this.btnCancelAppointment.Name = "btnCancelAppointment";
             this.btnCancelAppointment.Size = new System.Drawing.Size(170, 36);
             this.btnCancelAppointment.TabIndex = 17;
@@ -121,7 +122,7 @@
             // txtEmail
             // 
             this.txtEmail.AutoSize = true;
-            this.txtEmail.Location = new System.Drawing.Point(215, 385);
+            this.txtEmail.Location = new System.Drawing.Point(39, 388);
             this.txtEmail.Name = "txtEmail";
             this.txtEmail.Size = new System.Drawing.Size(131, 16);
             this.txtEmail.TabIndex = 18;
@@ -130,7 +131,7 @@
             // cmbAppointmentTime
             // 
             this.cmbAppointmentTime.FormattingEnabled = true;
-            this.cmbAppointmentTime.Location = new System.Drawing.Point(395, 447);
+            this.cmbAppointmentTime.Location = new System.Drawing.Point(219, 450);
             this.cmbAppointmentTime.Name = "cmbAppointmentTime";
             this.cmbAppointmentTime.Size = new System.Drawing.Size(284, 24);
             this.cmbAppointmentTime.TabIndex = 21;
@@ -138,7 +139,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(215, 451);
+            this.label1.Location = new System.Drawing.Point(39, 454);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(133, 16);
             this.label1.TabIndex = 20;
@@ -147,7 +148,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(215, 93);
+            this.label2.Location = new System.Drawing.Point(39, 96);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(36, 16);
             this.label2.TabIndex = 22;
@@ -156,7 +157,7 @@
             // txtTitle
             // 
             this.txtTitle.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtTitle.Location = new System.Drawing.Point(395, 93);
+            this.txtTitle.Location = new System.Drawing.Point(219, 96);
             this.txtTitle.Name = "txtTitle";
             this.txtTitle.Size = new System.Drawing.Size(284, 22);
             this.txtTitle.TabIndex = 23;
@@ -164,7 +165,7 @@
             // txtDescription
             // 
             this.txtDescription.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtDescription.Location = new System.Drawing.Point(395, 145);
+            this.txtDescription.Location = new System.Drawing.Point(219, 148);
             this.txtDescription.MaximumSize = new System.Drawing.Size(1000, 200);
             this.txtDescription.Name = "txtDescription";
             this.txtDescription.Size = new System.Drawing.Size(284, 22);
@@ -173,7 +174,7 @@
             // txtContact
             // 
             this.txtContact.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtContact.Location = new System.Drawing.Point(395, 258);
+            this.txtContact.Location = new System.Drawing.Point(219, 261);
             this.txtContact.MaximumSize = new System.Drawing.Size(1000, 200);
             this.txtContact.Name = "txtContact";
             this.txtContact.Size = new System.Drawing.Size(284, 22);
@@ -182,7 +183,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(215, 258);
+            this.label3.Location = new System.Drawing.Point(39, 261);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(55, 16);
             this.label3.TabIndex = 25;
@@ -191,7 +192,7 @@
             // txtLocation
             // 
             this.txtLocation.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtLocation.Location = new System.Drawing.Point(395, 194);
+            this.txtLocation.Location = new System.Drawing.Point(219, 197);
             this.txtLocation.MaximumSize = new System.Drawing.Size(1000, 200);
             this.txtLocation.Name = "txtLocation";
             this.txtLocation.Size = new System.Drawing.Size(284, 22);
@@ -200,7 +201,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(215, 201);
+            this.label4.Location = new System.Drawing.Point(39, 204);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(61, 16);
             this.label4.TabIndex = 27;
@@ -208,7 +209,7 @@
             // 
             // dtpAppointmentDay
             // 
-            this.dtpAppointmentDay.Location = new System.Drawing.Point(395, 377);
+            this.dtpAppointmentDay.Location = new System.Drawing.Point(219, 380);
             this.dtpAppointmentDay.Name = "dtpAppointmentDay";
             this.dtpAppointmentDay.Size = new System.Drawing.Size(283, 22);
             this.dtpAppointmentDay.TabIndex = 29;
@@ -216,7 +217,7 @@
             // dgvAppointments
             // 
             this.dgvAppointments.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dgvAppointments.Location = new System.Drawing.Point(12, 549);
+            this.dgvAppointments.Location = new System.Drawing.Point(12, 521);
             this.dgvAppointments.Name = "dgvAppointments";
             this.dgvAppointments.RowHeadersWidth = 51;
             this.dgvAppointments.RowTemplate.Height = 24;
@@ -226,7 +227,7 @@
             // btnDeleteAppointment
             // 
             this.btnDeleteAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnDeleteAppointment.Location = new System.Drawing.Point(212, 488);
+            this.btnDeleteAppointment.Location = new System.Drawing.Point(642, 289);
             this.btnDeleteAppointment.Name = "btnDeleteAppointment";
             this.btnDeleteAppointment.Size = new System.Drawing.Size(170, 36);
             this.btnDeleteAppointment.TabIndex = 31;
@@ -248,7 +249,7 @@
             // btnAppointmentReports
             // 
             this.btnAppointmentReports.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnAppointmentReports.Location = new System.Drawing.Point(316, 789);
+            this.btnAppointmentReports.Location = new System.Drawing.Point(373, 811);
             this.btnAppointmentReports.Name = "btnAppointmentReports";
             this.btnAppointmentReports.Size = new System.Drawing.Size(170, 36);
             this.btnAppointmentReports.TabIndex = 33;
@@ -256,11 +257,23 @@
             this.btnAppointmentReports.UseVisualStyleBackColor = true;
             this.btnAppointmentReports.Click += new System.EventHandler(this.btnAppointmentReports_Click);
             // 
+            // btnUpdateAppointment
+            // 
+            this.btnUpdateAppointment.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnUpdateAppointment.Location = new System.Drawing.Point(642, 204);
+            this.btnUpdateAppointment.Name = "btnUpdateAppointment";
+            this.btnUpdateAppointment.Size = new System.Drawing.Size(170, 36);
+            this.btnUpdateAppointment.TabIndex = 34;
+            this.btnUpdateAppointment.Text = "Update Appointment ";
+            this.btnUpdateAppointment.UseVisualStyleBackColor = true;
+            this.btnUpdateAppointment.Click += new System.EventHandler(this.btnUpdateAppointment_Click);
+            // 
             // AppointmentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(929, 859);
+            this.Controls.Add(this.btnUpdateAppointment);
             this.Controls.Add(this.btnAppointmentReports);
             this.Controls.Add(this.btnCalendarView);
             this.Controls.Add(this.btnDeleteAppointment);
@@ -315,5 +328,6 @@
         private System.Windows.Forms.Button btnDeleteAppointment;
         private System.Windows.Forms.Button btnCalendarView;
         private System.Windows.Forms.Button btnAppointmentReports;
+        private System.Windows.Forms.Button btnUpdateAppointment;
     }
 }
