@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Globalization;
 using System.Net;
 using System.Windows.Forms;
@@ -97,6 +98,9 @@ namespace SchedulingSoftwareApp.Forms
                 // Validate against the database
                 using (var connection = Database.GetConnection())
                 {
+                    if (connection.State != ConnectionState.Open)
+                        connection.Open();
+
                     string query = "SELECT COUNT(*) FROM user WHERE userName = @username AND password = @password";
                     using (var cmd = new MySqlCommand(query, connection))
                     {
@@ -107,14 +111,29 @@ namespace SchedulingSoftwareApp.Forms
 
                         if (userCount > 0)
                         {
+                            // ✅ Success message
                             MessageBox.Show("You have successfully logged in!", "Login Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                            // ✅ Alert for upcoming appointment
+                            // ✅ Log the login to file
+                            string logPath = "Login_History.txt";
+                            string logEntry = $"{DateTime.Now:G} - Username: {username}";
+
+                            try
+                            {
+                                System.IO.File.AppendAllText(logPath, logEntry + Environment.NewLine);
+                            }
+                            catch (Exception logEx)
+                            {
+                                MessageBox.Show($"Failed to write login history: {logEx.Message}", "Logging Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            }
+
+                            // ✅ Check for upcoming appointment alert
                             if (Appointment.HasUpcomingAppointmentWithin15Min())
                             {
                                 MessageBox.Show("⚠️ You have an appointment within the next 15 minutes!", "Upcoming Appointment", MessageBoxButtons.OK, MessageBoxIcon.Information);
                             }
 
+                            // ✅ Proceed to main window
                             MainForm mainForm = new MainForm();
                             mainForm.Show();
                             this.Hide();
@@ -131,6 +150,7 @@ namespace SchedulingSoftwareApp.Forms
                 MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
 
     }
 }
