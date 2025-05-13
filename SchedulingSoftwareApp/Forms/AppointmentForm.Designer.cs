@@ -51,6 +51,7 @@
             this.btnAppointmentReports = new System.Windows.Forms.Button();
             this.btnUpdateAppointment = new System.Windows.Forms.Button();
             this.btnLogout = new System.Windows.Forms.Button();
+            this.btnBack = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvAppointments)).BeginInit();
             this.SuspendLayout();
             // 
@@ -104,7 +105,7 @@
             this.btnSaveAppointment.Name = "btnSaveAppointment";
             this.btnSaveAppointment.Size = new System.Drawing.Size(170, 36);
             this.btnSaveAppointment.TabIndex = 16;
-            this.btnSaveAppointment.Text = "Add Appointment ";
+            this.btnSaveAppointment.Text = "Add/Save Appointment ";
             this.btnSaveAppointment.UseVisualStyleBackColor = true;
             this.btnSaveAppointment.Click += new System.EventHandler(this.btnSaveAppointment_Click);
             // 
@@ -267,11 +268,22 @@
             this.btnLogout.UseVisualStyleBackColor = true;
             this.btnLogout.Click += new System.EventHandler(this.btnLogout_Click);
             // 
+            // btnBack
+            // 
+            this.btnBack.Location = new System.Drawing.Point(827, 54);
+            this.btnBack.Name = "btnBack";
+            this.btnBack.Size = new System.Drawing.Size(90, 36);
+            this.btnBack.TabIndex = 36;
+            this.btnBack.Text = "Back";
+            this.btnBack.UseVisualStyleBackColor = true;
+            this.btnBack.Click += new System.EventHandler(this.btnBack_Click);
+            // 
             // AppointmentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(929, 859);
+            this.Controls.Add(this.btnBack);
             this.Controls.Add(this.btnLogout);
             this.Controls.Add(this.btnUpdateAppointment);
             this.Controls.Add(this.btnAppointmentReports);
@@ -328,5 +340,6 @@
         private System.Windows.Forms.Button btnAppointmentReports;
         private System.Windows.Forms.Button btnUpdateAppointment;
         private System.Windows.Forms.Button btnLogout;
+        private System.Windows.Forms.Button btnBack;
     }
 }

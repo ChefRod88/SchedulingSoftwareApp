@@ -1,6 +1,9 @@
 ﻿using MySql.Data.MySqlClient;
+using SchedulingSoftwareApp.Models;
 using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp.Forms
@@ -19,33 +22,25 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                using (var conn = Database.GetConnection())
-                {
-                    if (conn.State != ConnectionState.Open)
-                        conn.Open();
+                var appointments = Appointment.GetAllAppointments();
 
-                    string query = @"
-                SELECT 
-                    DATE_FORMAT(start, '%Y-%m') AS 'Month', 
-                    type AS 'Appointment Type', 
-                    COUNT(*) AS 'Total Appointments'
-                FROM appointment
-                GROUP BY DATE_FORMAT(start, '%Y-%m'), type
-                ORDER BY DATE_FORMAT(start, '%Y-%m'), type";
-
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    DataTable typesByMonthTable = new DataTable();
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                var result = appointments
+                    .GroupBy(a => new { a.Start.Month, a.Type })
+                    .Select(g => new
                     {
-                        typesByMonthTable.Load(reader);
-                    }
+                        Month = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(g.Key.Month),
+                        Type = g.Key.Type,
+                        Count = g.Count()
+                    })
+                    .OrderBy(r => r.Month)
+                    .ThenBy(r => r.Type)
+                    .ToList();
 
-                    dgvTypesByMonth.DataSource = typesByMonthTable;
-                }
+                dgvTypesByMonth.DataSource = result;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading appointment types by month: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error loading appointment types by month: {ex.Message}", "Report Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -53,36 +48,27 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                using (var conn = Database.GetConnection())
-                {
-                    if (conn.State != ConnectionState.Open)
-                        conn.Open();
+                var appointments = Appointment.GetAllAppointments();
 
-                    string query = @"
-                        SELECT 
-                            u.userName AS 'User',
-                            a.title AS 'Title',
-                            a.start AS 'Start Time',
-                            a.end AS 'End Time',
-                            c.customerName AS 'Customer'
-                        FROM appointment a
-                        JOIN user u ON a.userId = u.userId
-                        JOIN customer c ON a.customerId = c.customerId
-                        ORDER BY u.userName, a.start";
-
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    DataTable userSchedulesTable = new DataTable();
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                var result = appointments
+                    .GroupBy(a => a.CreatedBy)
+                    .SelectMany(g => g.Select(a => new
                     {
-                        userSchedulesTable.Load(reader);
-                    }
+                        User = g.Key,
+                        a.Title,
+                        a.Type,
+                        Start = a.Start.ToLocalTime(),
+                        End = a.End.ToLocalTime()
+                    }))
+                    .OrderBy(r => r.User)
+                    .ThenBy(r => r.Start)
+                    .ToList();
 
-                    dgvUserSchedules.DataSource = userSchedulesTable;
-                }
+                dgvUserSchedules.DataSource = result;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading user schedules: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error loading user schedules: {ex.Message}", "Report Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -90,42 +76,31 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                using (var conn = Database.GetConnection())
-                {
-                    if (conn.State != ConnectionState.Open)
-                        conn.Open();
+                var appointments = Appointment.GetAllAppointments();
+                var customers = CustomerRepository.GetAllCustomers();
 
-                    string query = @"
-                        SELECT 
-                            c.customerName AS 'Customer',
-                            COUNT(a.appointmentId) AS 'Total Appointments',
-                            MIN(a.start) AS 'First Appointment',
-                            MAX(a.end) AS 'Last Appointment'
-                        FROM appointment a
-                        JOIN customer c ON a.customerId = c.customerId
-                        GROUP BY c.customerName
-                        ORDER BY c.customerName";
-
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    DataTable customerSummaryTable = new DataTable();
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                var result = appointments
+                    .GroupBy(a => a.CustomerId)
+                    .Select(g => new
                     {
-                        customerSummaryTable.Load(reader);
-                    }
+                        Customer = customers.FirstOrDefault(c => c.CustomerId == g.Key)?.CustomerName ?? "Unknown",
+                        TotalAppointments = g.Count(),
+                        FirstAppointment = g.Min(a => a.Start).ToLocalTime(),
+                        LastAppointment = g.Max(a => a.End).ToLocalTime()
+                    })
+                    .OrderBy(r => r.Customer)
+                    .ToList();
 
-                    dgvCustomerSummary.DataSource = customerSummaryTable;
-                }
+                dgvCustomerSummary.DataSource = result;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error loading customer appointment summary: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error loading customer appointment summary: {ex.Message}", "Report Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void btnBack_Click(object sender, EventArgs e)
         {
-            // Close the ReportsForm and open the AppointmentForm
-            
             this.Close();
         }
     }

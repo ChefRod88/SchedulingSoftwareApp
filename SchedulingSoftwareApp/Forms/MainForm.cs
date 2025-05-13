@@ -22,12 +22,11 @@ namespace SchedulingSoftwareApp.Forms
                     if (conn.State != ConnectionState.Open)
                         conn.Open();
 
-                    // Join customer and address tables to include address and phone
+                    // SQL query to get customer, address, and phone details
                     string query = @"
                 SELECT 
                     c.customerId,
                     c.customerName,
-                    c.addressId,  -- Include addressId for update
                     a.address,
                     a.phone,
                     c.active,
@@ -38,19 +37,77 @@ namespace SchedulingSoftwareApp.Forms
                 FROM customer c
                 JOIN address a ON c.addressId = a.addressId";
 
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-
-                    // Use a DataTable to handle complex joins
                     DataTable customerTable = new DataTable();
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    using (var cmd = new MySqlCommand(query, conn))
+                    using (var reader = cmd.ExecuteReader())
                     {
                         customerTable.Load(reader);
                     }
 
-                    // Bind the DataTable to the DataGridView
-                    dgvCustomers.DataSource = customerTable;
+                    // Clear existing columns to avoid duplication
+                    dgvCustomers.Columns.Clear();
 
-                    conn.Close();
+                    // Add columns to the DataGridView (without Customer ID)
+                    dgvCustomers.AutoGenerateColumns = false;
+
+                    dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "customerName",
+                        HeaderText = "Customer Name",
+                        Width = 150
+                    });
+
+                    dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "address",
+                        HeaderText = "Address",
+                        Width = 200
+                    });
+
+                    dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "phone",
+                        HeaderText = "Phone Number",
+                        Width = 120
+                    });
+
+                    dgvCustomers.Columns.Add(new DataGridViewCheckBoxColumn
+                    {
+                        DataPropertyName = "active",
+                        HeaderText = "Active",
+                        Width = 60
+                    });
+
+                    dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "createDate",
+                        HeaderText = "Create Date",
+                        Width = 130
+                    });
+
+                    dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "createdBy",
+                        HeaderText = "Created By",
+                        Width = 100
+                    });
+
+                    dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "lastUpdate",
+                        HeaderText = "Last Update",
+                        Width = 130
+                    });
+
+                    dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
+                    {
+                        DataPropertyName = "lastUpdateBy",
+                        HeaderText = "Last Update By",
+                        Width = 100
+                    });
+
+                    // Set the data source
+                    dgvCustomers.DataSource = customerTable;
                 }
             }
             catch (Exception ex)
@@ -59,14 +116,11 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-
-
-
         private void btnAddCustomer_Click(object sender, EventArgs e)
         {
-            CustomerForm customerForm = new CustomerForm();
+            CustomerForm customerForm = new CustomerForm(LoadCustomers); // 👈 Pass refresh method
             customerForm.ShowDialog();
-            LoadCustomers(); // Refresh the customer list
+
         }
 
         private void btnUpdateCustomer_Click(object sender, EventArgs e)
@@ -78,12 +132,19 @@ namespace SchedulingSoftwareApp.Forms
                     // Get the DataRowView from the selected row
                     DataRowView rowView = (DataRowView)dgvCustomers.SelectedRows[0].DataBoundItem;
 
-                    // Create a Customer object from the DataRowView
+                    // Extract customer data from the selected row
+                    string customerName = rowView["customerName"].ToString();
+                    string address = rowView["address"].ToString();
+                    string phone = rowView["phone"].ToString();
+                    bool active = Convert.ToBoolean(rowView["active"]);
+
+                    // Open the customer form with the selected customer data
                     Customer selectedCustomer = new Customer
                     {
                         CustomerId = Convert.ToInt32(rowView["customerId"]),
                         CustomerName = rowView["customerName"].ToString(),
-                        AddressId = Convert.ToInt32(rowView["addressId"]),
+                        Address = rowView["address"].ToString(),
+                        Phone = rowView["phone"].ToString(),
                         Active = Convert.ToBoolean(rowView["active"]),
                         CreateDate = Convert.ToDateTime(rowView["createDate"]),
                         CreatedBy = rowView["createdBy"].ToString(),
@@ -91,15 +152,9 @@ namespace SchedulingSoftwareApp.Forms
                         LastUpdateBy = rowView["lastUpdateBy"].ToString()
                     };
 
-                    // Prevent updating inactive customers if needed
-                    if (!selectedCustomer.Active)
-                    {
-                        MessageBox.Show("Inactive customers cannot be updated. Please activate the customer first.", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
+                    CustomerForm customerForm = new CustomerForm(selectedCustomer, LoadCustomers);
 
-                    // Open the customer form with the selected customer
-                    CustomerForm customerForm = new CustomerForm(selectedCustomer);
+
                     customerForm.ShowDialog();
 
                     // Refresh the customer list after closing the form
@@ -116,8 +171,6 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-
-
         private void btnDeleteCustomer_Click(object sender, EventArgs e)
         {
             try
@@ -126,17 +179,20 @@ namespace SchedulingSoftwareApp.Forms
                 {
                     // Get the DataRowView from the selected row
                     DataRowView rowView = (DataRowView)dgvCustomers.SelectedRows[0].DataBoundItem;
+
+                    // Extract values
                     int customerId = Convert.ToInt32(rowView["customerId"]);
                     string customerName = rowView["customerName"].ToString();
                     bool isActive = Convert.ToBoolean(rowView["active"]);
 
-                    // Prevent deleting active customers if required
+                    // Prevent deleting active customers
                     if (isActive)
                     {
                         MessageBox.Show("Active customers cannot be deleted. Please deactivate the customer first.", "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
 
+                    // Confirm deletion
                     var confirmResult = MessageBox.Show($"Are you sure you want to delete customer '{customerName}'?",
                         "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
@@ -165,8 +221,6 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-
-
         private void btnLogout_Click(object sender, EventArgs e)
         {
             this.Hide();
@@ -183,7 +237,9 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                // Open the Appointment Form
+                // ✅ FIX: Clear connection pool to avoid "already open" error
+                MySqlConnection.ClearAllPools();
+
                 AppointmentForm appointmentForm = new AppointmentForm();
                 appointmentForm.Show();
                 this.Hide();  // Hide the current form
@@ -192,6 +248,14 @@ namespace SchedulingSoftwareApp.Forms
             {
                 MessageBox.Show($"Error opening Appointment Form: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+
+        private void btnRefresh_Click(object sender, EventArgs e)
+        {
+            LoadCustomers(); // 🧼 Force refresh of DataGridView
+            MessageBox.Show("Customer list refreshed.", "Refresh Complete", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
         }
     }
 }

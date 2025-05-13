@@ -34,12 +34,13 @@
             this.btnLogout = new System.Windows.Forms.Button();
             this.dgvCustomers = new System.Windows.Forms.DataGridView();
             this.btnManageAppointments = new System.Windows.Forms.Button();
+            this.btnRefresh = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dgvCustomers)).BeginInit();
             this.SuspendLayout();
             // 
             // btnDeleteCustomer
             // 
-            this.btnDeleteCustomer.Location = new System.Drawing.Point(420, 30);
+            this.btnDeleteCustomer.Location = new System.Drawing.Point(409, 438);
             this.btnDeleteCustomer.Name = "btnDeleteCustomer";
             this.btnDeleteCustomer.Size = new System.Drawing.Size(150, 50);
             this.btnDeleteCustomer.TabIndex = 8;
@@ -49,7 +50,7 @@
             // 
             // btnUpdateCustomer
             // 
-            this.btnUpdateCustomer.Location = new System.Drawing.Point(230, 30);
+            this.btnUpdateCustomer.Location = new System.Drawing.Point(226, 438);
             this.btnUpdateCustomer.Name = "btnUpdateCustomer";
             this.btnUpdateCustomer.Size = new System.Drawing.Size(150, 50);
             this.btnUpdateCustomer.TabIndex = 9;
@@ -59,7 +60,7 @@
             // 
             // btnAddCustomer
             // 
-            this.btnAddCustomer.Location = new System.Drawing.Point(40, 30);
+            this.btnAddCustomer.Location = new System.Drawing.Point(40, 438);
             this.btnAddCustomer.Name = "btnAddCustomer";
             this.btnAddCustomer.Size = new System.Drawing.Size(150, 50);
             this.btnAddCustomer.TabIndex = 10;
@@ -91,7 +92,7 @@
             // 
             // btnManageAppointments
             // 
-            this.btnManageAppointments.Location = new System.Drawing.Point(320, 438);
+            this.btnManageAppointments.Location = new System.Drawing.Point(620, 438);
             this.btnManageAppointments.Name = "btnManageAppointments";
             this.btnManageAppointments.Size = new System.Drawing.Size(150, 50);
             this.btnManageAppointments.TabIndex = 13;
@@ -99,11 +100,22 @@
             this.btnManageAppointments.UseVisualStyleBackColor = true;
             this.btnManageAppointments.Click += new System.EventHandler(this.btnManageAppointments_Click);
             // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Location = new System.Drawing.Point(24, 21);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(150, 50);
+            this.btnRefresh.TabIndex = 14;
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.UseVisualStyleBackColor = true;
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(820, 500);
+            this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.btnManageAppointments);
             this.Controls.Add(this.dgvCustomers);
             this.Controls.Add(this.btnLogout);
@@ -126,5 +138,6 @@
         private System.Windows.Forms.Button btnLogout;
         private System.Windows.Forms.DataGridView dgvCustomers;
         private System.Windows.Forms.Button btnManageAppointments;
+        private System.Windows.Forms.Button btnRefresh;
     }
 }

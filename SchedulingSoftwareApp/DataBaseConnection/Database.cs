@@ -6,9 +6,10 @@ namespace SchedulingSoftwareApp
 {
     public static class Database
     {
-        private static string connectionString = ConfigurationManager.ConnectionStrings["localdb"].ConnectionString;
+        private static readonly string connectionString = ConfigurationManager.ConnectionStrings["localdb"].ConnectionString;
 
-        public static MySqlConnection GetConnection()
+        // Using a lambda expression for creating and opening the connection
+        public static Func<MySqlConnection> GetConnection = () =>
         {
             try
             {
@@ -20,6 +21,6 @@ namespace SchedulingSoftwareApp
             {
                 throw new Exception($"Database connection error: {ex.Message}");
             }
-        }
+        };
     }
 }

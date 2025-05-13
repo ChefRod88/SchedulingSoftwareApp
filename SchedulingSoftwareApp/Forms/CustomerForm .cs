@@ -1,7 +1,4 @@
-﻿using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System;
 using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp.Forms
@@ -10,125 +7,101 @@ namespace SchedulingSoftwareApp.Forms
     {
         private Customer _selectedCustomer;
         private bool _isUpdateMode;
+        private Action RefreshCustomerGrid;
 
-        public CustomerForm()
+        // For adding new customer
+        public CustomerForm(Action refreshCustomerGrid)
         {
             InitializeComponent();
-            LoadAddresses();
             _isUpdateMode = false;
             this.Text = "Add New Customer";
+            RefreshCustomerGrid = refreshCustomerGrid;
         }
 
-        public CustomerForm(Customer selectedCustomer)
+        // For updating existing customer
+        public CustomerForm(Customer selectedCustomer, Action refreshCustomerGrid)
         {
             InitializeComponent();
-            LoadAddresses();
             _selectedCustomer = selectedCustomer;
             _isUpdateMode = true;
             this.Text = $"Update Customer - {selectedCustomer.CustomerName}";
+            RefreshCustomerGrid = refreshCustomerGrid;
 
-            // Populate the fields with the selected customer data
+            // Populate fields
             txtCustomerName.Text = selectedCustomer.CustomerName;
-            cmbAddress.SelectedValue = selectedCustomer.AddressId;
+            txtAddress.Text = selectedCustomer.Address;
+            txtPhone.Text = selectedCustomer.Phone;
             chkActive.Checked = selectedCustomer.Active;
         }
 
-        private void LoadAddresses()
-        {
-            try
-            {
-                using (var conn = Database.GetConnection())
-                {
-                    if (conn.State != ConnectionState.Open)
-                        conn.Open();
-
-                    string query = "SELECT addressId, address FROM address";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-
-                    List<Address> addresses = new List<Address>();
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
-                    {
-                        while (reader.Read())
-                        {
-                            addresses.Add(new Address
-                            {
-                                AddressId = reader.GetInt32("addressId"),
-                                AddressLine = reader.GetString("address")
-                            });
-                        }
-                    }
-
-                    cmbAddress.DataSource = addresses;
-                    cmbAddress.DisplayMember = "AddressLine1";
-                    cmbAddress.ValueMember = "AddressId";
-
-                    conn.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading addresses: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-        private bool ValidateCustomerInputs(out string customerName, out int addressId, out bool active)
+        private bool ValidateCustomerInputs(out string customerName, out string address, out string phone, out bool active)
         {
             customerName = txtCustomerName.Text.Trim();
+            address = txtAddress.Text.Trim();
+            phone = txtPhone.Text.Trim();
             active = chkActive.Checked;
-            addressId = -1;  // Initialize the out parameter
 
-            // Validate customer name
-            if (string.IsNullOrEmpty(customerName))
+            if (string.IsNullOrWhiteSpace(customerName))
             {
-                MessageBox.Show("Customer name cannot be empty.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Customer name is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
-            // Validate address selection
-            if (cmbAddress.SelectedValue == null || !int.TryParse(cmbAddress.SelectedValue.ToString(), out addressId))
+            if (string.IsNullOrWhiteSpace(address))
             {
-                MessageBox.Show("Please select a valid address.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Address is required.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(phone) || !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^\d{3}-\d{3}-\d{4}$"))
+            {
+                MessageBox.Show("Phone number must be in the format XXX-XXX-XXXX.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
             return true;
         }
 
-        
-
         private void btnSaveCustomer_Click(object sender, EventArgs e)
         {
             try
             {
-                if (!ValidateCustomerInputs(out string customerName, out int addressId, out bool active))
+                if (!ValidateCustomerInputs(out string customerName, out string address, out string phone, out bool active))
                     return;
+
+                bool success;
 
                 if (_isUpdateMode)
                 {
-                    // Update existing customer
-                    bool success = CustomerRepository.UpdateCustomer(_selectedCustomer.CustomerId, customerName, addressId, active, "Admin");
-                    if (success)
-                    {
-                        MessageBox.Show("Customer updated successfully!");
-                        this.Close(); // Close the form after successful update
-                    }
-                    else
-                    {
-                        MessageBox.Show("Failed to update customer. Please check the input values.", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
+                    success = CustomerRepository.UpdateCustomer(
+                        _selectedCustomer.CustomerId,
+                        customerName,
+                        address,
+                        phone,
+                        active,
+                        "Admin"
+                    );
                 }
                 else
                 {
-                    // Add new customer
-                    bool success = CustomerRepository.InsertCustomer(customerName, addressId, active, "Admin");
-                    if (success)
-                    {
-                        MessageBox.Show("Customer added successfully!");
-                        this.Close(); // Close the form after successful addition
-                    }
-                    else
-                    {
-                        MessageBox.Show("Failed to add customer. Please check the input values.", "Insert Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
+                    success = CustomerRepository.InsertCustomer(
+                        customerName,
+                        address,
+                        phone,
+                        active,
+                        "Admin"
+                    );
+                }
+
+                if (success)
+                {
+                    MessageBox.Show(_isUpdateMode ? "Customer updated successfully!" : "Customer added successfully!");
+                    RefreshCustomerGrid?.Invoke();
+                    this.Close();
+                }
+                else
+                {
+                    MessageBox.Show("An error occurred. Please check your input or try again.", "Operation Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
@@ -140,7 +113,6 @@ namespace SchedulingSoftwareApp.Forms
         private void btnCancel_Click(object sender, EventArgs e)
         {
             this.Close();
-
         }
     }
 }

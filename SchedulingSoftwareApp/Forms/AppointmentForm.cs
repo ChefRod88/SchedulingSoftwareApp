@@ -53,7 +53,6 @@ namespace SchedulingSoftwareApp.Forms
 
         private void LoadTypeDropdown()
         {
-            // Populate predefined appointment types
             cmbType.Items.AddRange(new string[]
             {
                 "Consultation",
@@ -67,7 +66,6 @@ namespace SchedulingSoftwareApp.Forms
 
         private void LoadTimeBlocks()
         {
-            // Populate the time blocks from 9:00 AM to 5:00 PM in 30-minute increments
             DateTime startTime = DateTime.Today.AddHours(9);
             DateTime endTime = DateTime.Today.AddHours(17);
 
@@ -77,7 +75,6 @@ namespace SchedulingSoftwareApp.Forms
                 startTime = startTime.AddMinutes(15);
             }
 
-            // Set the default selected time to 9:00 AM
             if (cmbAppointmentTime.Items.Count > 0)
                 cmbAppointmentTime.SelectedIndex = 0;
         }
@@ -86,16 +83,13 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                // Create a new list to hold appointments
                 List<Appointment> appointments = new List<Appointment>();
 
-                // Use a single connection with proper exception handling
                 using (MySqlConnection conn = Database.GetConnection())
                 {
                     if (conn.State != ConnectionState.Open)
                         conn.Open();
 
-                    // Fetch all appointments
                     string query = "SELECT * FROM appointment";
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
@@ -103,7 +97,6 @@ namespace SchedulingSoftwareApp.Forms
                         {
                             while (reader.Read())
                             {
-                                // Convert UTC times to local time for display
                                 DateTime startUtc = reader.GetDateTime("start");
                                 DateTime endUtc = reader.GetDateTime("end");
 
@@ -129,11 +122,9 @@ namespace SchedulingSoftwareApp.Forms
                     }
                 }
 
-                // Bind to the DataGridView
                 BindingList<Appointment> bindingList = new BindingList<Appointment>(appointments);
                 dgvAppointments.DataSource = bindingList;
 
-                // Set column headers for better readability
                 dgvAppointments.Columns["AppointmentId"].HeaderText = "ID";
                 dgvAppointments.Columns["CustomerId"].HeaderText = "Customer ID";
                 dgvAppointments.Columns["Title"].HeaderText = "Title";
@@ -145,7 +136,6 @@ namespace SchedulingSoftwareApp.Forms
                 dgvAppointments.Columns["Start"].HeaderText = "Start Time (Local)";
                 dgvAppointments.Columns["End"].HeaderText = "End Time (Local)";
 
-                // Hide unnecessary columns
                 dgvAppointments.Columns["CreateDate"].Visible = false;
                 dgvAppointments.Columns["CreatedBy"].Visible = false;
                 dgvAppointments.Columns["LastUpdate"].Visible = false;
@@ -163,13 +153,8 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-
-
-
-
         private void PopulateFormFields()
         {
-            // Populate fields if in update mode
             if (_isUpdateMode && _selectedAppointment != null)
             {
                 cmbCustomerName.SelectedValue = _selectedAppointment.CustomerId;
@@ -183,12 +168,8 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-
-
-
         private bool ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime start, out DateTime end)
         {
-            // Initialize out parameters
             customerId = -1;
             title = txtTitle.Text.Trim();
             description = txtDescription.Text.Trim();
@@ -198,34 +179,29 @@ namespace SchedulingSoftwareApp.Forms
             start = DateTime.MinValue;
             end = DateTime.MinValue;
 
-            // Validate customer
             if (cmbCustomerName.SelectedValue == null || !int.TryParse(cmbCustomerName.SelectedValue.ToString(), out customerId))
             {
                 MessageBox.Show("Please select a valid customer.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
-            // Validate required fields
             if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(location) || string.IsNullOrEmpty(contact) || string.IsNullOrEmpty(type))
             {
                 MessageBox.Show("All fields are required and cannot be empty.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
-            // Validate time block selection
             if (cmbAppointmentTime.SelectedItem == null)
             {
                 MessageBox.Show("Please select a valid appointment time.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
-            // Set start and end times
             DateTime selectedDate = dtpAppointmentDay.Value.Date;
             DateTime selectedTime = DateTime.Parse(cmbAppointmentTime.SelectedItem.ToString());
             start = selectedDate.Add(selectedTime.TimeOfDay);
-            end = start.AddMinutes(30);  // Default to a 30-minute appointment
+            end = start.AddMinutes(30);
 
-            // Validate business hours (9:00 AM to 5:00 PM, Monday to Friday)
             if (start.Hour < 9 || start.Hour >= 17 || start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday)
             {
                 MessageBox.Show("Appointments must be scheduled during business hours (9:00 AM to 5:00 PM, Monday to Friday).", "Business Hours Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -234,7 +210,6 @@ namespace SchedulingSoftwareApp.Forms
 
             return true;
         }
-
 
         private void btnCancelAppointment_Click(object sender, EventArgs e)
         {
@@ -245,19 +220,22 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                // Validate inputs
                 if (!ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime startLocal, out DateTime endLocal))
                     return;
 
-                // Convert local times to UTC (considering the local time zone)
                 TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
                 DateTime startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, localTimeZone);
                 DateTime endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, localTimeZone);
 
+                if (Appointment.HasOverlappingAppointment(customerId, startUtc, endUtc))
+                {
+                    MessageBox.Show("This appointment overlaps with an existing appointment for this customer.", "Overlap Detected", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
                 bool success;
                 if (_isUpdateMode && _selectedAppointment != null)
                 {
-                    // Update existing appointment
                     success = Appointment.UpdateAppointment(
                         _selectedAppointment.AppointmentId,
                         customerId,
@@ -271,13 +249,11 @@ namespace SchedulingSoftwareApp.Forms
                         "Admin"
                     );
 
-                    // Clear the update mode and selected appointment
                     _isUpdateMode = false;
                     _selectedAppointment = null;
                 }
                 else
                 {
-                    // Add new appointment
                     success = Appointment.InsertAppointment(
                         customerId,
                         title,
@@ -294,7 +270,7 @@ namespace SchedulingSoftwareApp.Forms
                 if (success)
                 {
                     MessageBox.Show("Your appointment has been saved, and we will send you an email.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    LoadAppointments();  // Refresh the grid to show the new or updated appointment
+                    LoadAppointments();
                 }
                 else
                 {
@@ -307,32 +283,25 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-
-
-
         private void btnDeleteAppointment_Click(object sender, EventArgs e)
         {
             try
             {
-                // Make sure a row is selected
                 if (dgvAppointments.SelectedRows.Count > 0)
                 {
-                    // Get the selected appointment ID
                     int appointmentId = Convert.ToInt32(dgvAppointments.SelectedRows[0].Cells["appointmentId"].Value);
                     string appointmentTitle = dgvAppointments.SelectedRows[0].Cells["title"].Value.ToString();
 
-                    // Confirm deletion
                     var confirmResult = MessageBox.Show($"Are you sure you want to delete the appointment '{appointmentTitle}'?",
                         "Confirm Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
 
                     if (confirmResult == DialogResult.Yes)
                     {
-                        // Attempt to delete the appointment
                         bool success = Appointment.DeleteAppointment(appointmentId);
                         if (success)
                         {
                             MessageBox.Show("Appointment deleted successfully.", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            LoadAppointments(); // Refresh the grid after deletion
+                            LoadAppointments();
                         }
                         else
                         {
@@ -354,7 +323,7 @@ namespace SchedulingSoftwareApp.Forms
         private void btnCalendarView_Click(object sender, EventArgs e)
         {
             CalendarForm calendarForm = new CalendarForm();
-            calendarForm.ShowDialog(); // Use ShowDialog to keep it modal
+            calendarForm.ShowDialog();
         }
 
         private void btnAppointmentReports_Click(object sender, EventArgs e)
@@ -367,7 +336,6 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                // Ensure a row is selected
                 if (dgvAppointments.SelectedRows.Count > 0)
                 {
                     int appointmentId = Convert.ToInt32(dgvAppointments.SelectedRows[0].Cells["AppointmentId"].Value);
@@ -375,11 +343,9 @@ namespace SchedulingSoftwareApp.Forms
 
                     if (selectedAppointment != null)
                     {
-                        // Set the selected appointment for updating
                         _selectedAppointment = selectedAppointment;
                         _isUpdateMode = true;
 
-                        // Populate the form fields
                         cmbCustomerName.SelectedValue = selectedAppointment.CustomerId;
                         txtTitle.Text = selectedAppointment.Title;
                         txtDescription.Text = selectedAppointment.Description;
@@ -406,6 +372,13 @@ namespace SchedulingSoftwareApp.Forms
             this.Hide();
             LoginForm loginForm = new LoginForm();
             loginForm.Show();
+        }
+
+        private void btnBack_Click(object sender, EventArgs e)
+        {
+            this.Hide();
+            MainForm mainForm = new MainForm();
+            mainForm.Show();
         }
     }
 }

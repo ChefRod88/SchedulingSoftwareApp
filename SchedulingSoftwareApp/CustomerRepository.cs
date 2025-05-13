@@ -10,30 +10,34 @@ namespace SchedulingSoftwareApp
     {
         public static List<Customer> GetAllCustomers()
         {
-            List<Customer> customers = new List<Customer>();
+            var customers = new List<Customer>();
 
             try
             {
                 using (var conn = Database.GetConnection())
                 {
-                    if (conn.State != System.Data.ConnectionState.Open)
-                        conn.Open();
+                    if (conn.State != ConnectionState.Closed)
+                        conn.Close(); // 🛑 Close it before opening
+
+                    conn.Open();
 
                     string query = @"
-                        SELECT 
-                            customerId,
-                            customerName,
-                            addressId,
-                            active,
-                            createDate,
-                            createdBy,
-                            lastUpdate,
-                            lastUpdateBy
-                        FROM customer";
+                SELECT 
+                    c.customerId,
+                    c.customerName,
+                    c.addressId,
+                    a.address,
+                    a.phone,
+                    c.active,
+                    c.createDate,
+                    c.createdBy,
+                    c.lastUpdate,
+                    c.lastUpdateBy
+                FROM customer c
+                JOIN address a ON c.addressId = a.addressId";
 
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    using (var cmd = new MySqlCommand(query, conn))
+                    using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -42,6 +46,8 @@ namespace SchedulingSoftwareApp
                                 CustomerId = reader.GetInt32("customerId"),
                                 CustomerName = reader.GetString("customerName"),
                                 AddressId = reader.GetInt32("addressId"),
+                                Address = reader.GetString("address"),
+                                Phone = reader.GetString("phone"),
                                 Active = reader.GetBoolean("active"),
                                 CreateDate = reader.GetDateTime("createDate"),
                                 CreatedBy = reader.GetString("createdBy"),
@@ -50,45 +56,66 @@ namespace SchedulingSoftwareApp
                             });
                         }
                     }
-
-                    conn.Close();
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error loading customers: {ex.Message}");
+                MessageBox.Show($"Error loading customers: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             return customers;
         }
-    
 
 
 
-
-        public static bool InsertCustomer(string customerName, int addressId, bool active, string createdBy)
+        public static bool InsertCustomer(string customerName, string address, string phone, bool active, string createdBy)
         {
             try
             {
                 using (var conn = Database.GetConnection())
                 {
-                    // Ensure the connection is not already open
-                    if (conn.State != ConnectionState.Open)
+                    if (conn.State != System.Data.ConnectionState.Open)
                         conn.Open();
 
-                    string query = "INSERT INTO customer (customerName, addressId, active, createDate, createdBy, lastUpdate, lastUpdateBy) " +
-                                   "VALUES (@name, @addressId, @active, NOW(), @createdBy, NOW(), @createdBy)";
+                    // ✅ Insert into address table with required fields
+                    string insertAddressQuery = @"
+                INSERT INTO address (address, phone, cityId, postalCode, createDate, createdBy, lastUpdate, lastUpdateBy)
+                VALUES (@address, @phone, @cityId, @postalCode, NOW(), @createdBy, NOW(), @createdBy)";
 
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@name", customerName);
-                    cmd.Parameters.AddWithValue("@addressId", addressId);
-                    cmd.Parameters.AddWithValue("@active", active);
-                    cmd.Parameters.AddWithValue("@createdBy", createdBy);
+                    using (var addressCmd = new MySqlCommand(insertAddressQuery, conn))
+                    {
+                        addressCmd.Parameters.AddWithValue("@address", address);
+                        addressCmd.Parameters.AddWithValue("@phone", phone);
+                        addressCmd.Parameters.AddWithValue("@cityId", 1); // default cityId
+                        addressCmd.Parameters.AddWithValue("@postalCode", "00000"); // placeholder postal code
+                        addressCmd.Parameters.AddWithValue("@createdBy", createdBy);
 
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    conn.Close();
+                        addressCmd.ExecuteNonQuery();
+                    }
 
-                    return rowsAffected > 0;
+                    // ✅ Get newly inserted addressId
+                    int addressId;
+                    using (var getIdCmd = new MySqlCommand("SELECT LAST_INSERT_ID()", conn))
+                    {
+                        addressId = Convert.ToInt32(getIdCmd.ExecuteScalar());
+                    }
+
+                    // ✅ Insert into customer table
+                    string insertCustomerQuery = @"
+                INSERT INTO customer (customerName, addressId, active, createDate, createdBy, lastUpdate, lastUpdateBy)
+                VALUES (@customerName, @addressId, @active, NOW(), @createdBy, NOW(), @createdBy)";
+
+                    using (var customerCmd = new MySqlCommand(insertCustomerQuery, conn))
+                    {
+                        customerCmd.Parameters.AddWithValue("@customerName", customerName);
+                        customerCmd.Parameters.AddWithValue("@addressId", addressId);
+                        customerCmd.Parameters.AddWithValue("@active", active ? 1 : 0);
+                        customerCmd.Parameters.AddWithValue("@createdBy", createdBy);
+
+                        customerCmd.ExecuteNonQuery();
+                    }
+
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -99,30 +126,52 @@ namespace SchedulingSoftwareApp
         }
 
 
-        public static bool UpdateCustomer(int customerId, string customerName, int addressId, bool active, string updatedBy)
+
+
+        public static bool UpdateCustomer(int customerId, string customerName, string address, string phone, bool active, string updatedBy)
         {
             try
             {
                 using (var conn = Database.GetConnection())
                 {
-                    // Ensure the connection is not already open
-                    if (conn.State != ConnectionState.Open)
+                    if (conn.State != System.Data.ConnectionState.Open)
                         conn.Open();
 
-                    string query = "UPDATE customer SET customerName = @name, addressId = @addressId, active = @active, " +
-                                   "lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE customerId = @id";
+                    // Get addressId from customer
+                    int addressId;
+                    using (var getIdCmd = new MySqlCommand("SELECT addressId FROM customer WHERE customerId = @customerId", conn))
+                    {
+                        getIdCmd.Parameters.AddWithValue("@customerId", customerId);
+                        addressId = Convert.ToInt32(getIdCmd.ExecuteScalar());
+                    }
 
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@name", customerName);
-                    cmd.Parameters.AddWithValue("@addressId", addressId);
-                    cmd.Parameters.AddWithValue("@active", active);
-                    cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
-                    cmd.Parameters.AddWithValue("@id", customerId);
+                    // Update address
+                    using (var addressCmd = new MySqlCommand(@"
+                UPDATE address 
+                SET address = @address, phone = @phone, lastUpdate = NOW(), lastUpdateBy = @updatedBy 
+                WHERE addressId = @addressId", conn))
+                    {
+                        addressCmd.Parameters.AddWithValue("@address", address);
+                        addressCmd.Parameters.AddWithValue("@phone", phone);
+                        addressCmd.Parameters.AddWithValue("@updatedBy", updatedBy);
+                        addressCmd.Parameters.AddWithValue("@addressId", addressId);
+                        addressCmd.ExecuteNonQuery();
+                    }
 
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    conn.Close();
+                    // Update customer
+                    using (var customerCmd = new MySqlCommand(@"
+                UPDATE customer 
+                SET customerName = @customerName, active = @active, lastUpdate = NOW(), lastUpdateBy = @updatedBy 
+                WHERE customerId = @customerId", conn))
+                    {
+                        customerCmd.Parameters.AddWithValue("@customerName", customerName);
+                        customerCmd.Parameters.AddWithValue("@active", active);
+                        customerCmd.Parameters.AddWithValue("@updatedBy", updatedBy);
+                        customerCmd.Parameters.AddWithValue("@customerId", customerId);
+                        customerCmd.ExecuteNonQuery();
+                    }
 
-                    return rowsAffected > 0;
+                    return true;
                 }
             }
             catch (Exception ex)
@@ -139,18 +188,18 @@ namespace SchedulingSoftwareApp
             {
                 using (var conn = Database.GetConnection())
                 {
-                    // Ensure the connection is not already open
-                    if (conn.State != ConnectionState.Open)
+                    // ✅ Only open if not already open
+                    if (conn.State != System.Data.ConnectionState.Open)
                         conn.Open();
 
-                    string query = "DELETE FROM customer WHERE customerId = @id";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-                    cmd.Parameters.AddWithValue("@id", customerId);
+                    string deleteQuery = "DELETE FROM customer WHERE customerId = @customerId";
 
-                    int rowsAffected = cmd.ExecuteNonQuery();
-                    conn.Close();
-
-                    return rowsAffected > 0;
+                    using (var cmd = new MySqlCommand(deleteQuery, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@customerId", customerId);
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        return rowsAffected > 0;
+                    }
                 }
             }
             catch (Exception ex)

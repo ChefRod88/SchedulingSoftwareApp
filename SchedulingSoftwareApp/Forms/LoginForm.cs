@@ -2,6 +2,8 @@
 using System.Globalization;
 using System.Net;
 using System.Windows.Forms;
+using MySql.Data.MySqlClient;
+using SchedulingSoftwareApp.Models;
 
 namespace SchedulingSoftwareApp.Forms
 {
@@ -30,8 +32,7 @@ namespace SchedulingSoftwareApp.Forms
 
         private void cmbLanguage_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string selectedLanguage = cmbLanguage.SelectedItem.ToString();
-            LanguageCode = selectedLanguage.ToLower();
+            LanguageCode = cmbLanguage.SelectedItem.ToString().ToLower();
             SetLanguageMessages();
         }
 
@@ -39,18 +40,11 @@ namespace SchedulingSoftwareApp.Forms
         {
             try
             {
-                // Get the current region and time zone
                 RegionInfo region = RegionInfo.CurrentRegion;
                 string city = GetCityFromIPAddress();
                 string timeZone = TimeZoneInfo.Local.DisplayName;
-
-                // Build the location message
                 LocationMessage = $"{city}, {region.EnglishName}, {timeZone}";
-
-                // Set the location label
                 lblLocation.Text = LocationMessage;
-
-                
             }
             catch (Exception ex)
             {
@@ -93,7 +87,6 @@ namespace SchedulingSoftwareApp.Forms
                 LoginErrorMessage = "The username and password do not match.";
             }
         }
-
         private void btnLogin_Click(object sender, EventArgs e)
         {
             try
@@ -101,17 +94,36 @@ namespace SchedulingSoftwareApp.Forms
                 string username = txtUsername.Text.Trim();
                 string password = txtPassword.Text.Trim();
 
-                // Validate credentials 
-                if (username == "test" && password == "test")
+                // Validate against the database
+                using (var connection = Database.GetConnection())
                 {
-                    MessageBox.Show("You have successfully logged in!", "Login Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    MainForm mainForm = new MainForm();
-                    mainForm.Show();
-                    this.Hide();
-                }
-                else
-                {
-                    MessageBox.Show(LoginErrorMessage, "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    string query = "SELECT COUNT(*) FROM user WHERE userName = @username AND password = @password";
+                    using (var cmd = new MySqlCommand(query, connection))
+                    {
+                        cmd.Parameters.AddWithValue("@username", username);
+                        cmd.Parameters.AddWithValue("@password", password);
+
+                        int userCount = Convert.ToInt32(cmd.ExecuteScalar());
+
+                        if (userCount > 0)
+                        {
+                            MessageBox.Show("You have successfully logged in!", "Login Successful", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                            // ✅ Alert for upcoming appointment
+                            if (Appointment.HasUpcomingAppointmentWithin15Min())
+                            {
+                                MessageBox.Show("⚠️ You have an appointment within the next 15 minutes!", "Upcoming Appointment", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            }
+
+                            MainForm mainForm = new MainForm();
+                            mainForm.Show();
+                            this.Hide();
+                        }
+                        else
+                        {
+                            MessageBox.Show(LoginErrorMessage, "Login Failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -120,6 +132,6 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-       
     }
 }
+
