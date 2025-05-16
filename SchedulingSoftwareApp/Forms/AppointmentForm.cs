@@ -168,7 +168,15 @@ namespace SchedulingSoftwareApp.Forms
             }
         }
 
-        private bool ValidateAppointmentInputs(out int customerId, out string title, out string description, out string location, out string contact, out string type, out DateTime start, out DateTime end)
+        private bool ValidateAppointmentInputs(
+    out int customerId,
+    out string title,
+    out string description,
+    out string location,
+    out string contact,
+    out string type,
+    out DateTime start,
+    out DateTime end)
         {
             customerId = -1;
             title = txtTitle.Text.Trim();
@@ -179,13 +187,15 @@ namespace SchedulingSoftwareApp.Forms
             start = DateTime.MinValue;
             end = DateTime.MinValue;
 
-            if (cmbCustomerName.SelectedValue == null || !int.TryParse(cmbCustomerName.SelectedValue.ToString(), out customerId))
+            if (cmbCustomerName.SelectedValue == null ||
+                !int.TryParse(cmbCustomerName.SelectedValue.ToString(), out customerId))
             {
                 MessageBox.Show("Please select a valid customer.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
-            if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(description) || string.IsNullOrEmpty(location) || string.IsNullOrEmpty(contact) || string.IsNullOrEmpty(type))
+            if (string.IsNullOrEmpty(title) || string.IsNullOrEmpty(description) ||
+                string.IsNullOrEmpty(location) || string.IsNullOrEmpty(contact) || string.IsNullOrEmpty(type))
             {
                 MessageBox.Show("All fields are required and cannot be empty.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
@@ -202,14 +212,22 @@ namespace SchedulingSoftwareApp.Forms
             start = selectedDate.Add(selectedTime.TimeOfDay);
             end = start.AddMinutes(30);
 
-            if (start.Hour < 9 || start.Hour >= 17 || start.DayOfWeek == DayOfWeek.Saturday || start.DayOfWeek == DayOfWeek.Sunday)
+            // Convert start time to EST before checking
+            TimeZoneInfo estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            DateTime startEST = TimeZoneInfo.ConvertTime(start, TimeZoneInfo.Local, estZone);
+
+            // Validate against EST business hours and weekdays
+            if (startEST.Hour < 9 || startEST.Hour >= 17 ||
+                startEST.DayOfWeek == DayOfWeek.Saturday ||
+                startEST.DayOfWeek == DayOfWeek.Sunday)
             {
-                MessageBox.Show("Appointments must be scheduled during business hours (9:00 AM to 5:00 PM, Monday to Friday).", "Business Hours Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Appointments must be scheduled during EST business hours (9:00 AM to 5:00 PM, Monday to Friday).", "Business Hours Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
-            return true;
+            return true; // ✅ All validations passed
         }
+
 
         private void btnCancelAppointment_Click(object sender, EventArgs e)
         {
@@ -380,5 +398,7 @@ namespace SchedulingSoftwareApp.Forms
             MainForm mainForm = new MainForm();
             mainForm.Show();
         }
+
+        
     }
 }

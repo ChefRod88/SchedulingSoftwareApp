@@ -21,7 +21,24 @@ namespace SchedulingSoftwareApp
         {
             using (var conn = Database.GetConnection())
             {
-                string query = "INSERT INTO address (address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy) VALUES (@address1, @address2, @cityId, @postalCode, @phone, NOW(), @createdBy, NOW(), @createdBy)";
+                // 🔒 Defensive programming for all string fields
+                if (string.IsNullOrWhiteSpace(addressLine1))
+                    addressLine1 = "Unknown Address";
+
+                if (string.IsNullOrWhiteSpace(addressLine2))
+                    addressLine2 = ""; // Optional field, can be empty
+
+                if (string.IsNullOrWhiteSpace(postalCode))
+                    postalCode = "00000";
+
+                if (string.IsNullOrWhiteSpace(phone))
+                    phone = "N/A";
+
+                if (string.IsNullOrWhiteSpace(createdBy))
+                    createdBy = "System";
+
+                string query = "INSERT INTO address (address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy) " +
+                               "VALUES (@address1, @address2, @cityId, @postalCode, @phone, NOW(), @createdBy, NOW(), @createdBy)";
                 MySqlCommand cmd = new MySqlCommand(query, conn);
                 cmd.Parameters.AddWithValue("@address1", addressLine1);
                 cmd.Parameters.AddWithValue("@address2", addressLine2);
@@ -34,6 +51,7 @@ namespace SchedulingSoftwareApp
                 return cmd.ExecuteNonQuery() > 0;
             }
         }
+
         public static List<Address> GetAllAddresses()
         {
             List<Address> addresses = new List<Address>();

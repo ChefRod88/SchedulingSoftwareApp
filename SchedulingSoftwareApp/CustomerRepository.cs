@@ -77,23 +77,43 @@ namespace SchedulingSoftwareApp
                     if (conn.State != System.Data.ConnectionState.Open)
                         conn.Open();
 
-                    // ✅ Insert into address table with required fields
+                    // 🔒 Defensive programming for string fields
+                    if (string.IsNullOrWhiteSpace(customerName))
+                        customerName = "Unnamed Customer";
+
+                    if (string.IsNullOrWhiteSpace(address))
+                        address = "Unknown Address";
+
+                    if (string.IsNullOrWhiteSpace(phone))
+                        phone = "N/A";
+
+                    if (string.IsNullOrWhiteSpace(createdBy))
+                        createdBy = "System";
+
+                    // ✅ Insert into address table with all required fields from the ERD
                     string insertAddressQuery = @"
-                INSERT INTO address (address, phone, cityId, postalCode, createDate, createdBy, lastUpdate, lastUpdateBy)
-                VALUES (@address, @phone, @cityId, @postalCode, NOW(), @createdBy, NOW(), @createdBy)";
+            INSERT INTO address (
+                address, address2, cityId, postalCode, phone, 
+                createDate, createdBy, lastUpdate, lastUpdateBy
+            )
+            VALUES (
+                @address, @address2, @cityId, @postalCode, @phone, 
+                NOW(), @createdBy, NOW(), @createdBy
+            )";
 
                     using (var addressCmd = new MySqlCommand(insertAddressQuery, conn))
                     {
                         addressCmd.Parameters.AddWithValue("@address", address);
+                        addressCmd.Parameters.AddWithValue("@address2", ""); // ✅ hidden but required
+                        addressCmd.Parameters.AddWithValue("@cityId", 1);    // ✅ default city
+                        addressCmd.Parameters.AddWithValue("@postalCode", "00000"); // ✅ fallback
                         addressCmd.Parameters.AddWithValue("@phone", phone);
-                        addressCmd.Parameters.AddWithValue("@cityId", 1); // default cityId
-                        addressCmd.Parameters.AddWithValue("@postalCode", "00000"); // placeholder postal code
                         addressCmd.Parameters.AddWithValue("@createdBy", createdBy);
 
                         addressCmd.ExecuteNonQuery();
                     }
 
-                    // ✅ Get newly inserted addressId
+                    // ✅ Get the newly inserted addressId
                     int addressId;
                     using (var getIdCmd = new MySqlCommand("SELECT LAST_INSERT_ID()", conn))
                     {
@@ -102,8 +122,14 @@ namespace SchedulingSoftwareApp
 
                     // ✅ Insert into customer table
                     string insertCustomerQuery = @"
-                INSERT INTO customer (customerName, addressId, active, createDate, createdBy, lastUpdate, lastUpdateBy)
-                VALUES (@customerName, @addressId, @active, NOW(), @createdBy, NOW(), @createdBy)";
+            INSERT INTO customer (
+                customerName, addressId, active, 
+                createDate, createdBy, lastUpdate, lastUpdateBy
+            )
+            VALUES (
+                @customerName, @addressId, @active, 
+                NOW(), @createdBy, NOW(), @createdBy
+            )";
 
                     using (var customerCmd = new MySqlCommand(insertCustomerQuery, conn))
                     {
@@ -124,6 +150,7 @@ namespace SchedulingSoftwareApp
                 return false;
             }
         }
+
 
 
 

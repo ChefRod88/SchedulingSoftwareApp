@@ -11,7 +11,10 @@ namespace SchedulingSoftwareApp.Forms
         {
             InitializeComponent();
             LoadCustomers();
+            
         }
+
+        
 
         private void LoadCustomers()
         {

@@ -32,25 +32,44 @@ namespace SchedulingSoftwareApp.Models
                     if (conn.State != ConnectionState.Open)
                         conn.Open();
 
+                    // 🔒 Defensive programming for all strings
+                    if (string.IsNullOrWhiteSpace(title))
+                        title = "No Title";
+
+                    if (string.IsNullOrWhiteSpace(description))
+                        description = "No Description";
+
+                    if (string.IsNullOrWhiteSpace(location))
+                        location = "Online";
+
+                    if (string.IsNullOrWhiteSpace(contact))
+                        contact = "N/A";
+
+                    if (string.IsNullOrWhiteSpace(type))
+                        type = "General";
+
+                    if (string.IsNullOrWhiteSpace(createdBy))
+                        createdBy = "System";
+
                     string insertQuery = @"
-                INSERT INTO appointment (
-                    customerId, userId, title, description, location, contact, type, url,
-                    start, end, createDate, createdBy, lastUpdate, lastUpdateBy
-                ) VALUES (
-                    @customerId, @userId, @title, @description, @location, @contact, @type, @url,
-                    @start, @end, NOW(), @createdBy, NOW(), @createdBy
-                )";
+            INSERT INTO appointment (
+                customerId, userId, title, description, location, contact, type, url,
+                start, end, createDate, createdBy, lastUpdate, lastUpdateBy
+            ) VALUES (
+                @customerId, @userId, @title, @description, @location, @contact, @type, @url,
+                @start, @end, NOW(), @createdBy, NOW(), @createdBy
+            )";
 
                     using (var cmd = new MySqlCommand(insertQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@customerId", customerId);
-                        cmd.Parameters.AddWithValue("@userId", 1); // 👈 hardcoded for now (you can replace with dynamic user)
+                        cmd.Parameters.AddWithValue("@userId", 1); // Replace with Session.CurrentUserId later
                         cmd.Parameters.AddWithValue("@title", title);
                         cmd.Parameters.AddWithValue("@description", description);
                         cmd.Parameters.AddWithValue("@location", location);
                         cmd.Parameters.AddWithValue("@contact", contact);
                         cmd.Parameters.AddWithValue("@type", type);
-                        cmd.Parameters.AddWithValue("@url", ""); // 👈 or make dynamic later
+                        cmd.Parameters.AddWithValue("@url", ""); // Keep blank unless used
                         cmd.Parameters.AddWithValue("@start", startUtc);
                         cmd.Parameters.AddWithValue("@end", endUtc);
                         cmd.Parameters.AddWithValue("@createdBy", createdBy);
@@ -63,10 +82,12 @@ namespace SchedulingSoftwareApp.Models
             }
             catch (Exception ex)
             {
+                // Log or display error if needed
                 MessageBox.Show($"Error inserting appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
+
 
 
 

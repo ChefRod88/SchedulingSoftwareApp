@@ -9,6 +9,8 @@ namespace SchedulingSoftwareApp
         private static readonly string connectionString = ConfigurationManager.ConnectionStrings["localdb"].ConnectionString;
 
         // Using a lambda expression for creating and opening the connection
+        //Func<Type> is a delegate type representing a method that returns a value of type T,
+        //in this case the type is MySqlConnection
         public static Func<MySqlConnection> GetConnection = () =>
         {
             try
