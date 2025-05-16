@@ -216,6 +216,8 @@ namespace SchedulingSoftwareApp.Forms
             TimeZoneInfo estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
             DateTime startEST = TimeZoneInfo.ConvertTime(start, TimeZoneInfo.Local, estZone);
 
+
+
             // Validate against EST business hours and weekdays
             if (startEST.Hour < 9 || startEST.Hour >= 17 ||
                 startEST.DayOfWeek == DayOfWeek.Saturday ||
