@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Windows.Forms;
+//using SchedulingSoftwareApp.Helpers; // 🔁 for TimeHelper
+
 
 namespace SchedulingSoftwareApp.Forms
 {
@@ -110,8 +112,11 @@ namespace SchedulingSoftwareApp.Forms
                                     Contact = reader.GetString("contact"),
                                     Type = reader.GetString("type"),
                                     Url = reader.GetString("url"),
-                                    Start = TimeZoneInfo.ConvertTimeFromUtc(startUtc, TimeZoneInfo.Local),
-                                    End = TimeZoneInfo.ConvertTimeFromUtc(endUtc, TimeZoneInfo.Local),
+
+                                    // Time Helper
+                                    Start = TimeHelper.ToEST(startUtc),
+                                    End = TimeHelper.ToEST(endUtc),
+
                                     CreateDate = reader.GetDateTime("createDate"),
                                     CreatedBy = reader.GetString("createdBy"),
                                     LastUpdate = reader.GetDateTime("lastUpdate"),
@@ -133,8 +138,10 @@ namespace SchedulingSoftwareApp.Forms
                 dgvAppointments.Columns["Contact"].HeaderText = "Contact";
                 dgvAppointments.Columns["Type"].HeaderText = "Type";
                 dgvAppointments.Columns["Url"].HeaderText = "URL";
-                dgvAppointments.Columns["Start"].HeaderText = "Start Time (Local)";
-                dgvAppointments.Columns["End"].HeaderText = "End Time (Local)";
+                // Clarity for (EST) Display
+                dgvAppointments.Columns["Start"].HeaderText = "Start Time (EST)";
+                dgvAppointments.Columns["End"].HeaderText = "End Time (EST)";
+
 
                 dgvAppointments.Columns["CreateDate"].Visible = false;
                 dgvAppointments.Columns["CreatedBy"].Visible = false;
@@ -163,20 +170,23 @@ namespace SchedulingSoftwareApp.Forms
                 txtLocation.Text = _selectedAppointment.Location;
                 txtContact.Text = _selectedAppointment.Contact;
                 cmbType.Text = _selectedAppointment.Type;
-                dtpAppointmentDay.Value = _selectedAppointment.Start.Date;
-                cmbAppointmentTime.SelectedItem = _selectedAppointment.Start.ToString("h:mm tt");
+                //Time Helper
+                DateTime estStart = TimeHelper.ToEST(_selectedAppointment.Start);
+                dtpAppointmentDay.Value = estStart.Date;
+                cmbAppointmentTime.SelectedItem = estStart.ToString("h:mm tt");
+
             }
         }
 
         private bool ValidateAppointmentInputs(
-    out int customerId,
-    out string title,
-    out string description,
-    out string location,
-    out string contact,
-    out string type,
-    out DateTime start,
-    out DateTime end)
+            out int customerId,
+            out string title,
+            out string description,
+            out string location,
+            out string contact,
+            out string type,
+            out DateTime start,
+            out DateTime end)
         {
             customerId = -1;
             title = txtTitle.Text.Trim();
@@ -214,7 +224,8 @@ namespace SchedulingSoftwareApp.Forms
 
             // Convert start time to EST before checking
             TimeZoneInfo estZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
-            DateTime startEST = TimeZoneInfo.ConvertTime(start, TimeZoneInfo.Local, estZone);
+            DateTime startEST = start;
+
 
 
 
@@ -223,7 +234,9 @@ namespace SchedulingSoftwareApp.Forms
                 startEST.DayOfWeek == DayOfWeek.Saturday ||
                 startEST.DayOfWeek == DayOfWeek.Sunday)
             {
-                MessageBox.Show("Appointments must be scheduled during EST business hours (9:00 AM to 5:00 PM, Monday to Friday).", "Business Hours Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Appointments must be scheduled during EST business hours" +
+                    " (9:00 AM to 5:00 PM, Monday to Friday).", "Business Hours Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return false;
             }
 
@@ -244,8 +257,10 @@ namespace SchedulingSoftwareApp.Forms
                     return;
 
                 TimeZoneInfo localTimeZone = TimeZoneInfo.Local;
-                DateTime startUtc = TimeZoneInfo.ConvertTimeToUtc(startLocal, localTimeZone);
-                DateTime endUtc = TimeZoneInfo.ConvertTimeToUtc(endLocal, localTimeZone);
+                //Time Helper
+                DateTime startUtc = TimeHelper.ToUTCFromEST(startLocal);
+                DateTime endUtc = TimeHelper.ToUTCFromEST(endLocal);
+
 
                 if (Appointment.HasOverlappingAppointment(customerId, startUtc, endUtc))
                 {
@@ -372,8 +387,11 @@ namespace SchedulingSoftwareApp.Forms
                         txtLocation.Text = selectedAppointment.Location;
                         txtContact.Text = selectedAppointment.Contact;
                         cmbType.SelectedItem = selectedAppointment.Type;
-                        dtpAppointmentDay.Value = selectedAppointment.Start.Date;
-                        cmbAppointmentTime.SelectedItem = selectedAppointment.Start.ToString("h:mm tt");
+                        //Time Helper
+                        DateTime estStart = TimeHelper.ToEST(_selectedAppointment.Start);
+                        dtpAppointmentDay.Value = estStart.Date;
+                        cmbAppointmentTime.SelectedItem = estStart.ToString("h:mm tt");
+
                     }
                 }
                 else
