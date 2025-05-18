@@ -23,53 +23,65 @@ namespace SchedulingSoftwareApp.Models
         public DateTime LastUpdate { get; set; }
         public string LastUpdateBy { get; set; }
 
-        public static bool InsertAppointment(int customerId, string title, string description, string location, string contact, string type, DateTime startUtc, DateTime endUtc, string createdBy)
+        public static bool InsertAppointment(
+    int customerId,
+    string title,
+    string description,
+    string location,
+    string contact,
+    string type,
+    DateTime startUtc,
+    DateTime endUtc,
+    string createdBy)
         {
             try
             {
+                // 🛡️ Validate IDs
+                if (customerId <= 0)
+                {
+                    MessageBox.Show("Invalid Customer ID. Cannot create appointment.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                // 🛡️ Validate and sanitize strings
+                title = string.IsNullOrWhiteSpace(title) ? "No Title" : title.Trim();
+                description = string.IsNullOrWhiteSpace(description) ? "No Description" : description.Trim();
+                location = string.IsNullOrWhiteSpace(location) ? "Online" : location.Trim();
+                contact = string.IsNullOrWhiteSpace(contact) ? "N/A" : contact.Trim();
+                type = string.IsNullOrWhiteSpace(type) ? "General" : type.Trim();
+                createdBy = string.IsNullOrWhiteSpace(createdBy) ? "System" : createdBy.Trim();
+
+                // 🛡️ Validate time integrity
+                if (startUtc >= endUtc)
+                {
+                    MessageBox.Show("Appointment start time must be before end time.", "Time Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
                 using (var conn = Database.GetConnection())
                 {
                     if (conn.State != ConnectionState.Open)
                         conn.Open();
 
-                    // 🔒 Defensive programming for all strings
-                    if (string.IsNullOrWhiteSpace(title))
-                        title = "No Title";
-
-                    if (string.IsNullOrWhiteSpace(description))
-                        description = "No Description";
-
-                    if (string.IsNullOrWhiteSpace(location))
-                        location = "Online";
-
-                    if (string.IsNullOrWhiteSpace(contact))
-                        contact = "N/A";
-
-                    if (string.IsNullOrWhiteSpace(type))
-                        type = "General";
-
-                    if (string.IsNullOrWhiteSpace(createdBy))
-                        createdBy = "System";
-
                     string insertQuery = @"
-            INSERT INTO appointment (
-                customerId, userId, title, description, location, contact, type, url,
-                start, end, createDate, createdBy, lastUpdate, lastUpdateBy
-            ) VALUES (
-                @customerId, @userId, @title, @description, @location, @contact, @type, @url,
-                @start, @end, NOW(), @createdBy, NOW(), @createdBy
-            )";
+                INSERT INTO appointment (
+                    customerId, userId, title, description, location, contact, type, url,
+                    start, end, createDate, createdBy, lastUpdate, lastUpdateBy
+                ) VALUES (
+                    @customerId, @userId, @title, @description, @location, @contact, @type, @url,
+                    @start, @end, NOW(), @createdBy, NOW(), @createdBy
+                )";
 
                     using (var cmd = new MySqlCommand(insertQuery, conn))
                     {
                         cmd.Parameters.AddWithValue("@customerId", customerId);
-                        cmd.Parameters.AddWithValue("@userId", 1); // Replace with Session.CurrentUserId later
+                        cmd.Parameters.AddWithValue("@userId", 1); // TODO: Replace with actual session/user ID
                         cmd.Parameters.AddWithValue("@title", title);
                         cmd.Parameters.AddWithValue("@description", description);
                         cmd.Parameters.AddWithValue("@location", location);
                         cmd.Parameters.AddWithValue("@contact", contact);
                         cmd.Parameters.AddWithValue("@type", type);
-                        cmd.Parameters.AddWithValue("@url", ""); // Keep blank unless used
+                        cmd.Parameters.AddWithValue("@url", ""); // Leave blank unless implemented
                         cmd.Parameters.AddWithValue("@start", startUtc);
                         cmd.Parameters.AddWithValue("@end", endUtc);
                         cmd.Parameters.AddWithValue("@createdBy", createdBy);
@@ -80,13 +92,18 @@ namespace SchedulingSoftwareApp.Models
                     return true;
                 }
             }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show($"Database error while inserting appointment: {ex.Message}", "MySQL Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
             catch (Exception ex)
             {
-                // Log or display error if needed
-                MessageBox.Show($"Error inserting appointment: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Unexpected error: {ex.Message}", "Insert Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }
         }
+
 
 
 

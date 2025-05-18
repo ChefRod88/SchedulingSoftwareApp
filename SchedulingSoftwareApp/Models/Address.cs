@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp
 {
@@ -17,40 +18,69 @@ namespace SchedulingSoftwareApp
         public DateTime LastUpdate { get; set; }
         public string LastUpdateBy { get; set; }
 
-        public static bool InsertAddress(string addressLine1, string addressLine2, int cityId, string postalCode, string phone, string createdBy)
+
+        // Defense
+        public static bool InsertAddress(
+             string addressLine1,
+             string addressLine2,
+             int cityId,
+             string postalCode,
+             string phone,
+             string createdBy)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                // 🔒 Defensive programming for all string fields
-                if (string.IsNullOrWhiteSpace(addressLine1))
-                    addressLine1 = "Unknown Address";
+                // Defensive string handling
+                addressLine1 = string.IsNullOrWhiteSpace(addressLine1) ? "Unknown Address" : addressLine1.Trim();
+                addressLine2 = string.IsNullOrWhiteSpace(addressLine2) ? "" : addressLine2.Trim();
+                postalCode = string.IsNullOrWhiteSpace(postalCode) ? "00000" : postalCode.Trim();
+                phone = string.IsNullOrWhiteSpace(phone) ? "N/A" : phone.Trim();
+                createdBy = string.IsNullOrWhiteSpace(createdBy) ? "System" : createdBy.Trim();
 
-                if (string.IsNullOrWhiteSpace(addressLine2))
-                    addressLine2 = ""; // Optional field, can be empty
+                // Defensive integer validation
+                if (cityId <= 0)
+                {
+                    MessageBox.Show("Invalid City ID. Please provide a valid city.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
-                if (string.IsNullOrWhiteSpace(postalCode))
-                    postalCode = "00000";
+                // Timestamps (createDate / lastUpdate) are handled in SQL with NOW(), but fallback logic is shown here just in case
 
-                if (string.IsNullOrWhiteSpace(phone))
-                    phone = "N/A";
+                using (var conn = Database.GetConnection())
+                {
+                    string query = @"
+                INSERT INTO address
+                (address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy)
+                VALUES
+                (@address1, @address2, @cityId, @postalCode, @phone, NOW(), @createdBy, NOW(), @createdBy)";
 
-                if (string.IsNullOrWhiteSpace(createdBy))
-                    createdBy = "System";
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@address1", addressLine1);
+                        cmd.Parameters.AddWithValue("@address2", addressLine2);
+                        cmd.Parameters.AddWithValue("@cityId", cityId);
+                        cmd.Parameters.AddWithValue("@postalCode", postalCode);
+                        cmd.Parameters.AddWithValue("@phone", phone);
+                        cmd.Parameters.AddWithValue("@createdBy", createdBy);
 
-                string query = "INSERT INTO address (address, address2, cityId, postalCode, phone, createDate, createdBy, lastUpdate, lastUpdateBy) " +
-                               "VALUES (@address1, @address2, @cityId, @postalCode, @phone, NOW(), @createdBy, NOW(), @createdBy)";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@address1", addressLine1);
-                cmd.Parameters.AddWithValue("@address2", addressLine2);
-                cmd.Parameters.AddWithValue("@cityId", cityId);
-                cmd.Parameters.AddWithValue("@postalCode", postalCode);
-                cmd.Parameters.AddWithValue("@phone", phone);
-                cmd.Parameters.AddWithValue("@createdBy", createdBy);
-
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                        conn.Open();
+                        int rowsAffected = cmd.ExecuteNonQuery();
+                        return rowsAffected > 0;
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show($"Database error: {ex.Message}", "MySQL Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
         public static List<Address> GetAllAddresses()
         {
