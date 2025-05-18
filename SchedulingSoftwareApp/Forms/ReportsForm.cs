@@ -57,14 +57,19 @@ namespace SchedulingSoftwareApp.Forms
                         User = g.Key,
                         a.Title,
                         a.Type,
-                        Start = a.Start.ToLocalTime(),
-                        End = a.End.ToLocalTime()
+                        //Time Helper
+                        Start = TimeHelper.ToEST(a.Start),
+                        End = TimeHelper.ToEST(a.End)
+
                     }))
                     .OrderBy(r => r.User)
                     .ThenBy(r => r.Start)
                     .ToList();
 
                 dgvUserSchedules.DataSource = result;
+                dgvUserSchedules.Columns["Start"].HeaderText = "Start (EST)";
+                dgvUserSchedules.Columns["End"].HeaderText = "End (EST)";
+
             }
             catch (Exception ex)
             {
@@ -85,13 +90,18 @@ namespace SchedulingSoftwareApp.Forms
                     {
                         Customer = customers.FirstOrDefault(c => c.CustomerId == g.Key)?.CustomerName ?? "Unknown",
                         TotalAppointments = g.Count(),
-                        FirstAppointment = g.Min(a => a.Start).ToLocalTime(),
-                        LastAppointment = g.Max(a => a.End).ToLocalTime()
+                        //Time Helper
+                        FirstAppointment = TimeHelper.ToEST(g.Min(a => a.Start)),
+                        LastAppointment = TimeHelper.ToEST(g.Max(a => a.End))
+
                     })
                     .OrderBy(r => r.Customer)
                     .ToList();
 
                 dgvCustomerSummary.DataSource = result;
+                dgvCustomerSummary.Columns["FirstAppointment"].HeaderText = "First Appointment (EST)";
+                dgvCustomerSummary.Columns["LastAppointment"].HeaderText = "Last Appointment (EST)";
+
             }
             catch (Exception ex)
             {

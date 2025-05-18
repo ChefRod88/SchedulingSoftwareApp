@@ -47,6 +47,16 @@ namespace SchedulingSoftwareApp.Forms
                         customerTable.Load(reader);
                     }
 
+                    // ✅ Convert timestamp columns from UTC to EST
+                    foreach (DataRow row in customerTable.Rows)
+                    {
+                        if (row["createDate"] is DateTime createDateUtc)
+                            row["createDate"] = TimeHelper.ToEST(createDateUtc);
+
+                        if (row["lastUpdate"] is DateTime lastUpdateUtc)
+                            row["lastUpdate"] = TimeHelper.ToEST(lastUpdateUtc);
+                    }
+
                     // Clear existing columns to avoid duplication
                     dgvCustomers.Columns.Clear();
 
@@ -84,7 +94,7 @@ namespace SchedulingSoftwareApp.Forms
                     dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
                     {
                         DataPropertyName = "createDate",
-                        HeaderText = "Create Date",
+                        HeaderText = "Create Date (EST)",
                         Width = 130
                     });
 
@@ -98,7 +108,7 @@ namespace SchedulingSoftwareApp.Forms
                     dgvCustomers.Columns.Add(new DataGridViewTextBoxColumn
                     {
                         DataPropertyName = "lastUpdate",
-                        HeaderText = "Last Update",
+                        HeaderText = "Last Update (EST)",
                         Width = 130
                     });
 
