@@ -6,6 +6,8 @@ using System.ComponentModel;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
+//using SchedulingSoftwareApp.Helpers;
+
 
 namespace SchedulingSoftwareApp.Forms
 {
@@ -52,8 +54,10 @@ namespace SchedulingSoftwareApp.Forms
                                 Contact = reader.GetString("contact"),
                                 Type = reader.GetString("type"),
                                 Url = reader.GetString("url"),
-                                Start = reader.GetDateTime("start"),
-                                End = reader.GetDateTime("end"),
+                                //Time Helper
+                                Start = TimeHelper.ToEST(reader.GetDateTime("start")),
+                                End = TimeHelper.ToEST(reader.GetDateTime("end")),
+
                                 CreateDate = reader.GetDateTime("createDate"),
                                 CreatedBy = reader.GetString("createdBy"),
                                 LastUpdate = reader.GetDateTime("lastUpdate"),
@@ -66,7 +70,10 @@ namespace SchedulingSoftwareApp.Forms
                 }
 
                 // Filter appointments for the selected date
-                var filteredAppointments = appointments.Where(a => a.Start.Date == selectedDate.Date).ToList();
+                var filteredAppointments = appointments
+                    .Where(a => TimeHelper.ToEST(a.Start).Date == selectedDate.Date)
+                    .ToList();
+
 
                 // Bind to the DataGridView
                 BindingList<Appointment> bindingList = new BindingList<Appointment>(filteredAppointments);
@@ -82,8 +89,9 @@ namespace SchedulingSoftwareApp.Forms
                 dgvAppointments.Columns["Contact"].HeaderText = "Contact";
                 dgvAppointments.Columns["Type"].HeaderText = "Type";
                 dgvAppointments.Columns["Url"].HeaderText = "URL";
-                dgvAppointments.Columns["Start"].HeaderText = "Start Time";
-                dgvAppointments.Columns["End"].HeaderText = "End Time";
+                dgvAppointments.Columns["Start"].HeaderText = "Start Time (EST)";
+                dgvAppointments.Columns["End"].HeaderText = "End Time (EST)";
+
 
                 // Hide columns if not necessary
                 dgvAppointments.Columns["CreateDate"].Visible = false;
@@ -135,8 +143,10 @@ namespace SchedulingSoftwareApp.Forms
                                 Contact = reader.GetString("contact"),
                                 Type = reader.GetString("type"),
                                 Url = reader.GetString("url"),
-                                Start = reader.GetDateTime("start"),
-                                End = reader.GetDateTime("end"),
+                                //Time Helper
+                                Start = TimeHelper.ToEST(reader.GetDateTime("start")),
+                                End = TimeHelper.ToEST(reader.GetDateTime("end")),
+
                                 CreateDate = reader.GetDateTime("createDate"),
                                 CreatedBy = reader.GetString("createdBy"),
                                 LastUpdate = reader.GetDateTime("lastUpdate"),
@@ -162,8 +172,9 @@ namespace SchedulingSoftwareApp.Forms
                 dgvAppointments.Columns["Contact"].HeaderText = "Contact";
                 dgvAppointments.Columns["Type"].HeaderText = "Type";
                 dgvAppointments.Columns["Url"].HeaderText = "URL";
-                dgvAppointments.Columns["Start"].HeaderText = "Start Time";
-                dgvAppointments.Columns["End"].HeaderText = "End Time";
+                dgvAppointments.Columns["Start"].HeaderText = "Start Time (EST)";
+                dgvAppointments.Columns["End"].HeaderText = "End Time (EST)";
+
 
                 // Hide columns if not necessary
                 dgvAppointments.Columns["CreateDate"].Visible = false;
