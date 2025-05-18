@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp
 {
@@ -19,78 +20,159 @@ namespace SchedulingSoftwareApp
 
         public static bool InsertCustomer(string customerName, int addressId, bool active, string createdBy)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "INSERT INTO customer (customerName, addressId, active, createDate, createdBy, lastUpdate, lastUpdateBy) VALUES (@name, @addressId, @active, NOW(), @createdBy, NOW(), @createdBy)";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", customerName);
-                cmd.Parameters.AddWithValue("@addressId", addressId);
-                cmd.Parameters.AddWithValue("@active", active);
-                cmd.Parameters.AddWithValue("@createdBy", createdBy);
+                if (string.IsNullOrWhiteSpace(customerName))
+                    customerName = "Unnamed Customer";
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                if (addressId <= 0)
+                {
+                    MessageBox.Show("Invalid address ID. Please select a valid address.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(createdBy))
+                    createdBy = "System";
+
+                using (var conn = Database.GetConnection())
+                {
+                    string query = @"
+                INSERT INTO customer (customerName, addressId, active, createDate, createdBy, lastUpdate, lastUpdateBy)
+                VALUES (@name, @addressId, @active, NOW(), @createdBy, NOW(), @createdBy)";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@name", customerName);
+                        cmd.Parameters.AddWithValue("@addressId", addressId);
+                        cmd.Parameters.AddWithValue("@active", active);
+                        cmd.Parameters.AddWithValue("@createdBy", createdBy);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error inserting customer: {ex.Message}", "Insert Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
         public static List<Customer> GetAllCustomers()
         {
             List<Customer> customers = new List<Customer>();
+
             using (var conn = Database.GetConnection())
             {
                 string query = "SELECT * FROM customer";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-
-                conn.Open();
-                using (MySqlDataReader reader = cmd.ExecuteReader())
+                using (var cmd = new MySqlCommand(query, conn))
                 {
-                    while (reader.Read())
+                    conn.Open();
+                    using (var reader = cmd.ExecuteReader())
                     {
-                        customers.Add(new Customer
+                        while (reader.Read())
                         {
-                            CustomerId = reader.GetInt32("customerId"),
-                            CustomerName = reader.GetString("customerName"),
-                            AddressId = reader.GetInt32("addressId"),
-                            Active = reader.GetBoolean("active"),
-                            CreateDate = reader.GetDateTime("createDate"),
-                            CreatedBy = reader.GetString("createdBy"),
-                            LastUpdate = reader.GetDateTime("lastUpdate"),
-                            LastUpdateBy = reader.GetString("lastUpdateBy")
-                        });
+                            customers.Add(new Customer
+                            {
+                                CustomerId = reader["customerId"] != DBNull.Value ? Convert.ToInt32(reader["customerId"]) : 0,
+                                CustomerName = reader["customerName"]?.ToString()?.Trim() ?? "Unnamed Customer",
+                                AddressId = reader["addressId"] != DBNull.Value ? Convert.ToInt32(reader["addressId"]) : -1,
+                                Active = reader["active"] != DBNull.Value && Convert.ToBoolean(reader["active"]),
+                                CreateDate = reader["createDate"] != DBNull.Value ? Convert.ToDateTime(reader["createDate"]) : DateTime.UtcNow,
+                                CreatedBy = reader["createdBy"]?.ToString()?.Trim() ?? "System",
+                                LastUpdate = reader["lastUpdate"] != DBNull.Value ? Convert.ToDateTime(reader["lastUpdate"]) : DateTime.UtcNow,
+                                LastUpdateBy = reader["lastUpdateBy"]?.ToString()?.Trim() ?? "System"
+                            });
+                        }
                     }
                 }
             }
+
             return customers;
         }
 
+
         public static bool UpdateCustomer(int customerId, string newName, int addressId, bool active, string updatedBy)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "UPDATE customer SET customerName = @name, addressId = @addressId, active = @active, lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE customerId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", newName);
-                cmd.Parameters.AddWithValue("@addressId", addressId);
-                cmd.Parameters.AddWithValue("@active", active);
-                cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
-                cmd.Parameters.AddWithValue("@id", customerId);
+                if (customerId <= 0)
+                {
+                    MessageBox.Show("Invalid customer ID.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                if (string.IsNullOrWhiteSpace(newName))
+                    newName = "Unnamed Customer";
+
+                if (addressId <= 0)
+                {
+                    MessageBox.Show("Invalid address ID.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(updatedBy))
+                    updatedBy = "System";
+
+                using (var conn = Database.GetConnection())
+                {
+                    string query = @"
+                UPDATE customer
+                SET customerName = @name, addressId = @addressId, active = @active,
+                    lastUpdate = NOW(), lastUpdateBy = @updatedBy
+                WHERE customerId = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@name", newName);
+                        cmd.Parameters.AddWithValue("@addressId", addressId);
+                        cmd.Parameters.AddWithValue("@active", active);
+                        cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
+                        cmd.Parameters.AddWithValue("@id", customerId);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error updating customer: {ex.Message}", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
         public static bool DeleteCustomer(int customerId)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "DELETE FROM customer WHERE customerId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", customerId);
+                if (customerId <= 0)
+                {
+                    MessageBox.Show("Invalid customer ID.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                using (var conn = Database.GetConnection())
+                {
+                    string query = "DELETE FROM customer WHERE customerId = @id";
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", customerId);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting customer: {ex.Message}", "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
 
     }
