@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp
 {
@@ -15,17 +16,35 @@ namespace SchedulingSoftwareApp
 
         public static bool InsertCountry(string countryName, string createdBy)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "INSERT INTO country (country, createDate, createdBy, lastUpdate, lastUpdateBy) VALUES (@name, NOW(), @createdBy, NOW(), @createdBy)";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", countryName);
-                cmd.Parameters.AddWithValue("@createdBy", createdBy);
+                // Defensive input validation
+                countryName = string.IsNullOrWhiteSpace(countryName) ? "Unknown Country" : countryName.Trim();
+                createdBy = string.IsNullOrWhiteSpace(createdBy) ? "System" : createdBy.Trim();
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                using (var conn = Database.GetConnection())
+                {
+                    string query = @"
+                INSERT INTO country (country, createDate, createdBy, lastUpdate, lastUpdateBy)
+                VALUES (@name, NOW(), @createdBy, NOW(), @createdBy)";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@name", countryName);
+                        cmd.Parameters.AddWithValue("@createdBy", createdBy);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error inserting country: {ex.Message}", "Insert Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
         public static List<string> GetAllCountries()
         {
@@ -33,47 +52,90 @@ namespace SchedulingSoftwareApp
             using (var conn = Database.GetConnection())
             {
                 string query = "SELECT country FROM country";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-
-                conn.Open();
-                using (MySqlDataReader reader = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
-                    while (reader.Read())
+                    conn.Open();
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
                     {
-                        countries.Add(reader.GetString("country"));
+                        while (reader.Read())
+                        {
+                            countries.Add(reader["country"]?.ToString()?.Trim() ?? "Unknown Country");
+                        }
                     }
                 }
             }
             return countries;
         }
 
+
         public static bool UpdateCountry(int countryId, string newName, string updatedBy)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "UPDATE country SET country = @name, lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE countryId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", newName);
-                cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
-                cmd.Parameters.AddWithValue("@id", countryId);
+                if (countryId <= 0)
+                {
+                    MessageBox.Show("Invalid Country ID. Cannot update record.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                newName = string.IsNullOrWhiteSpace(newName) ? "Unknown Country" : newName.Trim();
+                updatedBy = string.IsNullOrWhiteSpace(updatedBy) ? "System" : updatedBy.Trim();
+
+                using (var conn = Database.GetConnection())
+                {
+                    string query = @"
+                UPDATE country
+                SET country = @name, lastUpdate = NOW(), lastUpdateBy = @updatedBy
+                WHERE countryId = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@name", newName);
+                        cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
+                        cmd.Parameters.AddWithValue("@id", countryId);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error updating country: {ex.Message}", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
         public static bool DeleteCountry(int countryId)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "DELETE FROM country WHERE countryId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", countryId);
+                if (countryId <= 0)
+                {
+                    MessageBox.Show("Invalid Country ID. Cannot delete.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                using (var conn = Database.GetConnection())
+                {
+                    string query = "DELETE FROM country WHERE countryId = @id";
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", countryId);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting country: {ex.Message}", "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
 
     }
