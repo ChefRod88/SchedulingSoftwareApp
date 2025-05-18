@@ -1,6 +1,7 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
+using System.Windows.Forms;
 
 namespace SchedulingSoftwareApp
 {
@@ -16,18 +17,49 @@ namespace SchedulingSoftwareApp
 
         public static bool InsertCity(string cityName, int countryId, string createdBy)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "INSERT INTO city (city, countryId, createDate, createdBy, lastUpdate, lastUpdateBy) VALUES (@name, @countryId, NOW(), @createdBy, NOW(), @createdBy)";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", cityName);
-                cmd.Parameters.AddWithValue("@countryId", countryId);
-                cmd.Parameters.AddWithValue("@createdBy", createdBy);
+                if (string.IsNullOrWhiteSpace(cityName))
+                    cityName = "Unknown City";
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                if (countryId <= 0)
+                {
+                    MessageBox.Show("Invalid Country ID. Cannot create city record.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(createdBy))
+                    createdBy = "System";
+
+                using (var conn = Database.GetConnection())
+                {
+                    string query = @"
+                INSERT INTO city (city, countryId, createDate, createdBy, lastUpdate, lastUpdateBy)
+                VALUES (@name, @countryId, NOW(), @createdBy, NOW(), @createdBy)";
+
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@name", cityName);
+                        cmd.Parameters.AddWithValue("@countryId", countryId);
+                        cmd.Parameters.AddWithValue("@createdBy", createdBy);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show($"MySQL Error: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Unexpected error: {ex.Message}", "Insert Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
         public static List<string> GetAllCities()
         {
@@ -51,30 +83,70 @@ namespace SchedulingSoftwareApp
 
         public static bool UpdateCity(int cityId, string newName, string updatedBy)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "UPDATE city SET city = @name, lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE cityId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@name", newName);
-                cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
-                cmd.Parameters.AddWithValue("@id", cityId);
+                if (cityId <= 0)
+                {
+                    MessageBox.Show("Invalid City ID. Cannot update.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                if (string.IsNullOrWhiteSpace(newName))
+                    newName = "Unknown City";
+
+                if (string.IsNullOrWhiteSpace(updatedBy))
+                    updatedBy = "System";
+
+                using (var conn = Database.GetConnection())
+                {
+                    string query = "UPDATE city SET city = @name, lastUpdate = NOW(), lastUpdateBy = @updatedBy WHERE cityId = @id";
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@name", newName);
+                        cmd.Parameters.AddWithValue("@updatedBy", updatedBy);
+                        cmd.Parameters.AddWithValue("@id", cityId);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error updating city: {ex.Message}", "Update Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
         public static bool DeleteCity(int cityId)
         {
-            using (var conn = Database.GetConnection())
+            try
             {
-                string query = "DELETE FROM city WHERE cityId = @id";
-                MySqlCommand cmd = new MySqlCommand(query, conn);
-                cmd.Parameters.AddWithValue("@id", cityId);
+                if (cityId <= 0)
+                {
+                    MessageBox.Show("Invalid City ID. Cannot delete.", "Validation Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
+                }
 
-                conn.Open();
-                return cmd.ExecuteNonQuery() > 0;
+                using (var conn = Database.GetConnection())
+                {
+                    string query = "DELETE FROM city WHERE cityId = @id";
+                    using (var cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", cityId);
+
+                        conn.Open();
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error deleting city: {ex.Message}", "Delete Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
         }
+
 
 
     }
